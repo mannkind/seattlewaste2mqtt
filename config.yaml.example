@@ -1,0 +1,10 @@
+settings:
+    clientid: 'GoSeattleWasteMQTT'
+    broker:   'tcp://mosquitto:1883'
+    pubtopic: 'home/seattle_waste'
+    username: ''
+    password: ''
+
+control:
+    address: "Street Address w/o Seattle, WA and ZipCode"
+    alertdaysbefore: 1
