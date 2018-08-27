@@ -39,6 +39,7 @@ settings:
     pubtopic: 'home/seattle_waste'
 
 control:
-    address: "Street Address w/o Seattle, WA and ZipCode"
-    alertdaysbefore: 1
+    address: '<street address without city/state/zip>'
+    alertwithin: '24h'
+    lookupinterval: '8h'
 ```

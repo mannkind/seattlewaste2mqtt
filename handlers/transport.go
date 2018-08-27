@@ -39,7 +39,8 @@ type SeattleWasteMQTT struct {
 	Control struct {
 		Address         string
 		EncodedAddress  string
-		AlertDaysBefore int
+		AlertWithin time.Duration
+		LookupInterval time.Duration
 	}
 	LastPublished string
 }
@@ -81,18 +82,20 @@ func (t *SeattleWasteMQTT) onConnect(client mqtt.Client) {
 	}
 
 	lookup := func() {
+		log.Println("Beginning collection lookup")
 		t.encodeAddress()
 		collectionInfo, err := t.collectionLookup()
 		if err == nil {
 			t.publishCollectionInfo(collectionInfo)
 		} else {
             log.Println(err)
-        }
+		}
+		log.Println("Ending collection lookup")
 	}
 
 	for {
 		lookup()
-		time.Sleep(8 * time.Hour)
+		time.Sleep(t.Control.LookupInterval)
 	}
 }
 
@@ -170,7 +173,7 @@ func (t *SeattleWasteMQTT) collectionLookup() (seattleWasteJSONResponse, error) 
 
 func (t *SeattleWasteMQTT) publishCollectionInfo(info seattleWasteJSONResponse) {
 	info.Status = "OFF"
-    alertDate := info.Date.AddDate(0, 0, (-1 * t.Control.AlertDaysBefore))
+    alertDate := info.Date.Add(-1 * t.Control.AlertWithin)
     now := time.Now()
 	currentYear, currentMonth, currentDay := now.Date()
     today := time.Date(currentYear, currentMonth, currentDay, 0, 0, 0, 0, time.UTC)
@@ -193,5 +196,4 @@ func (t *SeattleWasteMQTT) publish(client mqtt.Client, topic string, payload str
 		log.Printf("Publish Error: %s", token.Error())
 	}
 	t.LastPublished = fmt.Sprintf("%s %s", topic, payload)
-	log.Println(t.LastPublished)
 }

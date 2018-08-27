@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/mannkind/seattle_waste_mqtt/handlers"
@@ -24,6 +25,20 @@ var SeattleWasteMQTTCmd = &cobra.Command{
 			if err := viper.Unmarshal(&controller); err != nil {
 				log.Panicf("Error unmarshaling configuration: %s", err)
 			}
+			
+			// Setup defaults
+			setupDefaults := func() {
+				if (controller.Control.AlertWithin == 0) {
+					duration, _ := time.ParseDuration("24h")
+					controller.Control.AlertWithin = duration
+				}
+	
+				if controller.Control.LookupInterval == 0 {
+					duration, _ := time.ParseDuration("8h")
+					controller.Control.LookupInterval = duration
+				}
+			}
+			setupDefaults()
 
 			if err := controller.Start(); err != nil {
 				log.Panicf("Error starting MQTT transport handler: %s", err)
@@ -59,5 +74,5 @@ func init() {
 		log.Printf("Loaded Configuration %s", cfgFile)
 	})
 
-	SeattleWasteMQTTCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".mysb.yaml", "The path to the configuration file")
+	SeattleWasteMQTTCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".seattle_waste_mqtt.yaml", "The path to the configuration file")
 }

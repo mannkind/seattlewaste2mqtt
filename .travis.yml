@@ -8,6 +8,6 @@ script:
   - make setup
   - make
   - make test
-  - make cover
+# - make cover
 after_success:
   - bash <(curl -s https://codecov.io/bash) -f .GOPATH/cover/all.merged
