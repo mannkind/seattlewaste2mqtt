@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/mannkind/seattle_waste_mqtt/handlers"
@@ -21,24 +20,10 @@ var SeattleWasteMQTTCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
 			log.Printf("Creating the MQTT transport handler")
-			controller := handlers.SeattleWasteMQTT{}
+			controller := handlers.CollectionLookup{}
 			if err := viper.Unmarshal(&controller); err != nil {
 				log.Panicf("Error unmarshaling configuration: %s", err)
 			}
-			
-			// Setup defaults
-			setupDefaults := func() {
-				if (controller.Control.AlertWithin == 0) {
-					duration, _ := time.ParseDuration("24h")
-					controller.Control.AlertWithin = duration
-				}
-	
-				if controller.Control.LookupInterval == 0 {
-					duration, _ := time.ParseDuration("8h")
-					controller.Control.LookupInterval = duration
-				}
-			}
-			setupDefaults()
 
 			if err := controller.Start(); err != nil {
 				log.Panicf("Error starting MQTT transport handler: %s", err)
@@ -66,6 +51,8 @@ func init() {
 			log.Printf("Configuration Changed: %s", e.Name)
 			reload <- true
 		})
+		viper.SetDefault("control.alertwithin", "24h")
+		viper.SetDefault("control.lookupinterval", "8h")
 
 		log.Printf("Loading Configuration %s", cfgFile)
 		if err := viper.ReadInConfig(); err != nil {
