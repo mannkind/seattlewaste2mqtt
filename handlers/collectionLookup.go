@@ -94,7 +94,7 @@ func (t *CollectionLookup) loop() {
 		log.Println("Ending address encoding")
 
 		log.Println("Beginning collection lookup")
-		if collectionInfo, err := t.collectionLookup(); err == nil {
+		if collectionInfo, err := t.collectionLookup(); collectionInfo.Start != "" && err == nil {
 			t.publishCollectionInfo(collectionInfo)
 		} else {
 			log.Println(err)
@@ -142,7 +142,7 @@ func (t *CollectionLookup) collectionLookup() (apiResponse, error) {
 	}
 
 	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
 	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	lastTimestamp := firstOfMonth.Unix()
 	todayTimestamp := today.Unix()
@@ -190,8 +190,9 @@ func (t *CollectionLookup) collectionLookup() (apiResponse, error) {
 }
 
 func (t *CollectionLookup) publishCollectionInfo(info apiResponse) {
+	until := info.Date.Sub(time.Now())
 	info.Status = "OFF"
-	if info.Date.Sub(time.Now()) <= t.Control.AlertWithin {
+	if until >= 0 && until <= t.Control.AlertWithin {
 		info.Status = "ON"
 	}
 
@@ -209,5 +210,6 @@ func (t *CollectionLookup) publish(client mqtt.Client, topic string, payload str
 	if token := client.Publish(topic, 0, retain, payload); token.Wait() && token.Error() != nil {
 		log.Printf("Publish Error: %s", token.Error())
 	}
-	t.LastPublished = fmt.Sprintf("%s %s", topic, payload)
+	t.LastPublished = fmt.Sprintf("Publishing - Topic:%s ; Payload: %s", topic, payload)
+	log.Println(t.LastPublished)
 }
