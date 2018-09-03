@@ -84,22 +84,27 @@ func (t *CollectionLookup) onConnect(client mqtt.Client) {
 		return
 	}
 
-	go t.loop()
+	go t.loop(false)
 }
 
-func (t *CollectionLookup) loop() {
+func (t *CollectionLookup) loop(once bool) {
 	for {
 		log.Println("Beginning address encoding")
 		t.encodeAddress()
 		log.Println("Ending address encoding")
 
 		log.Println("Beginning collection lookup")
-		if collectionInfo, err := t.collectionLookup(); collectionInfo.Start != "" && err == nil {
+		now := time.Now()
+		if collectionInfo, err := t.collectionLookup(now); collectionInfo.Start != "" && err == nil {
 			t.publishCollectionInfo(collectionInfo)
 		} else {
 			log.Println(err)
 		}
 		log.Println("Ending collection lookup")
+
+		if once {
+			break
+		}
 
 		time.Sleep(t.Control.LookupInterval)
 	}
@@ -133,7 +138,7 @@ func (t *CollectionLookup) encodeAddress() error {
 	return nil
 }
 
-func (t *CollectionLookup) collectionLookup() (apiResponse, error) {
+func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) {
 	noResult := apiResponse{}
 
 	// Guard-clause for a blank encoded address
@@ -141,7 +146,6 @@ func (t *CollectionLookup) collectionLookup() (apiResponse, error) {
 		return noResult, errors.New("No encoded address found for collection lookup")
 	}
 
-	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
 	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	lastTimestamp := firstOfMonth.Unix()
