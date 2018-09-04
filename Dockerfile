@@ -6,6 +6,6 @@ RUN apk add --no-cache --update build-base git && \
 
 FROM alpine:3.8
 RUN apk add --no-cache --update ca-certificates
-COPY --from=build /go/src/app/bin/seattle_waste_mqtt /usr/local/bin/seattle_waste_mqtt
+COPY --from=build /go/src/app/bin/seattlewaste2mqtt /usr/local/bin/seattlewaste2mqtt
 VOLUME /config
-CMD seattle_waste_mqtt -c /config/config.yaml
+CMD seattlewaste2mqtt -c /config/config.yaml

@@ -1,7 +1,7 @@
 # The import path is where your repository can be found.
 # Any subpackage should be imported as relative to it.
 # If you change this, run `make clean`.
-IMPORT_PATH := github.com/mannkind/seattle_waste_mqtt
+IMPORT_PATH := github.com/mannkind/seattlewaste2mqtt
 
 V := 1 # When V is set, print commands and build progress.
 

@@ -16,7 +16,7 @@ var Version = "X.X.X"
 
 // SeattleWasteMQTTCmd - The root Mysb commands
 var SeattleWasteMQTTCmd = &cobra.Command{
-	Use:   "seattle_waste_mqtt",
+	Use:   "seattlewaste2mqtt",
 	Short: "Publish Seattle Waste pickup via MQTT",
 	Long:  "Publish Seattle Waste pickup via MQTT",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -56,7 +56,7 @@ func init() {
 		log.Printf("Loaded Configuration %s", cfgFile)
 	})
 
-	SeattleWasteMQTTCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".seattle_waste_mqtt.yaml", "The path to the configuration file")
+	SeattleWasteMQTTCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".seattlewaste2mqtt.yaml", "The path to the configuration file")
 }
 
 func main() {

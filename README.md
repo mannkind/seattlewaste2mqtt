@@ -1,31 +1,31 @@
 # Seattle Waste MQTT
 
 [![Software
-License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)](https://github.com/mannkind/seattle_waste_mqtt/blob/master/LICENSE.md)
-[![Travis CI](https://img.shields.io/travis/mannkind/seattle_waste_mqtt/master.svg?style=flat-square)](https://travis-ci.org/mannkind/seattle_waste_mqtt)
-[![Coverage Status](https://img.shields.io/codecov/c/github/mannkind/seattle_waste_mqtt/master.svg)](http://codecov.io/github/mannkind/seattle_waste_mqtt?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/mannkind/seattle_waste_mqtt)](https://goreportcard.com/report/github.com/mannkind/seattle_waste_mqtt)
+License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)](https://github.com/mannkind/seattlewaste2mqtt/blob/master/LICENSE.md)
+[![Travis CI](https://img.shields.io/travis/mannkind/seattlewaste2mqtt/master.svg?style=flat-square)](https://travis-ci.org/mannkind/seattlewaste2mqtt)
+[![Coverage Status](https://img.shields.io/codecov/c/github/mannkind/seattlewaste2mqtt/master.svg)](http://codecov.io/github/mannkind/seattlewaste2mqtt?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mannkind/seattlewaste2mqtt)](https://goreportcard.com/report/github.com/mannkind/seattlewaste2mqtt)
 
 # Installation
 
 ## Via Docker
 ```
-docker run -d --name="seattle_waste_mqtt" -v /the/path/to/config_folder:/config -v /etc/localtime:/etc/localtime:ro mannkind/seattle_waste_mqtt
+docker run -d --name="seattlewaste2mqtt" -v /the/path/to/config_folder:/config -v /etc/localtime:/etc/localtime:ro mannkind/seattlewaste2mqtt
 ```
 
 ## Via Make
 ```
-git clone https://github.com/mannkind/seattle_waste_mqtt
-cd seattle_waste_mqtt
+git clone https://github.com/mannkind/seattlewaste2mqtt
+cd seattlewaste2mqtt
 make
-./bin/seattle_waste_mqtt -c */the/path/to/config_folder/config.yaml*
+./bin/seattlewaste2mqtt -c */the/path/to/config_folder/config.yaml*
 ```
 
 ## Via Go
 ```
-go get -u github.com/mannkind/seattle_waste_mqtt
-go install github.com/mannkind/seattle_waste_mqtt
-seattle_waste_mqtt -c */the/path/to/config_folder/config.yaml*
+go get -u github.com/mannkind/seattlewaste2mqtt
+go install github.com/mannkind/seattlewaste2mqtt
+seattlewaste2mqtt -c */the/path/to/config_folder/config.yaml*
 ```
 
 # Configuration
