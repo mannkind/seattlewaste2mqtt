@@ -1,14 +1,9 @@
 language: go
 go:
-  - "1.7"
-  - "1.8"
-  - "1.9"
-  - "1.10"
   - "1.11"
+env:
+  - GO111MODULE=on
 script:
-  - make setup
   - make
-  - make test
-  - make cover
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -f .GOPATH/cover/all.merged
+  - bash <(curl -s https://codecov.io/bash) -f /tmp/app.cover

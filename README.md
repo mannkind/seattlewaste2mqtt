@@ -21,13 +21,6 @@ make
 ./bin/seattlewaste2mqtt -c */the/path/to/config_folder/config.yaml*
 ```
 
-## Via Go
-```
-go get -u github.com/mannkind/seattlewaste2mqtt
-go install github.com/mannkind/seattlewaste2mqtt
-seattlewaste2mqtt -c */the/path/to/config_folder/config.yaml*
-```
-
 # Configuration
 
 Configuration happens in the config.yaml file. A full example might look this:

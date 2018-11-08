@@ -8,14 +8,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-var reload = make(chan bool)
-
 // Version - Set during compilation when using included Makefile
 var Version = "X.X.X"
 
-// SeattleWasteMQTTCmd - The root Mysb commands
-var SeattleWasteMQTTCmd = &cobra.Command{
+var cfgFile string
+var reload = make(chan bool)
+var seattleWasteMQTTCmd = &cobra.Command{
 	Use:   "seattlewaste2mqtt",
 	Short: "Publish Seattle Waste pickup via MQTT",
 	Long:  "Publish Seattle Waste pickup via MQTT",
@@ -56,17 +54,12 @@ func init() {
 		log.Printf("Loaded Configuration %s", cfgFile)
 	})
 
-	SeattleWasteMQTTCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".seattlewaste2mqtt.yaml", "The path to the configuration file")
+	seattleWasteMQTTCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".seattlewaste2mqtt.yaml", "The path to the configuration file")
 }
 
 func main() {
 	log.Printf("Seattle Waste Version: %s", Version)
-	Execute()
-}
-
-// Execute - Adds all child commands to the root command sets flags appropriately.
-func Execute() {
-	if err := SeattleWasteMQTTCmd.Execute(); err != nil {
+	if err := seattleWasteMQTTCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
