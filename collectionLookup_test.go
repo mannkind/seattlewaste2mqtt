@@ -4,30 +4,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caarlos0/env"
 	"github.com/eclipse/paho.mqtt.golang"
-	"gopkg.in/yaml.v2"
 )
 
 const knownGoodAddress = "2133 N 61ST ST"
 
 var testClient = mqtt.NewClient(mqtt.NewClientOptions())
 
-func defaultTestMQTT() *CollectionLookup {
-	var testConfig = `
-        settings:
-          clientid: 'GoMySysBootloader'
-          broker: "tcp://fake.mosquitto.org:1883"
-          pubtopic: 'mysensors_tx'
-
-        control:
-            address: ''
-    `
-
-	myMqtt := CollectionLookup{}
-	err := yaml.Unmarshal([]byte(testConfig), &myMqtt)
-	if err != nil {
-		panic(err)
-	}
+func defaultTestMQTT() *collectionLookup {
+	myMqtt := collectionLookup{}
+	env.Parse(&myMqtt)
 	return &myMqtt
 }
 
@@ -44,11 +31,11 @@ func TestEncodeAddress(t *testing.T) {
 	myMQTT.onConnect(testClient)
 
 	for _, v := range tests {
-		myMQTT.Control.Address = v.Address
-		myMQTT.Control.EncodedAddress = ""
+		myMQTT.Address = v.Address
+		myMQTT.encodedAddress = ""
 		myMQTT.encodeAddress()
-		if myMQTT.Control.EncodedAddress != v.EncodeAddress {
-			t.Errorf("Wrong encoded address. Actual: %s, Expected: %s", myMQTT.Control.EncodedAddress, v.EncodeAddress)
+		if myMQTT.encodedAddress != v.EncodeAddress {
+			t.Errorf("Wrong encoded address. Actual: %s, Expected: %s", myMQTT.encodedAddress, v.EncodeAddress)
 		}
 	}
 }
@@ -63,8 +50,8 @@ func TestCollectionLookup(t *testing.T) {
 	}
 
 	myMQTT := defaultTestMQTT()
-	myMQTT.Control.Address = knownGoodAddress
-	myMQTT.Control.EncodedAddress = knownGoodAddress
+	myMQTT.Address = knownGoodAddress
+	myMQTT.encodedAddress = knownGoodAddress
 
 	layout := "2006-01-02"
 	for _, v := range tests {
@@ -78,19 +65,19 @@ func TestCollectionLookup(t *testing.T) {
 
 func TestCollectionLookupLoop(t *testing.T) {
 	myMQTT := defaultTestMQTT()
-	myMQTT.Client = testClient
-	myMQTT.Control.Address = knownGoodAddress
-	myMQTT.Control.EncodedAddress = knownGoodAddress
+	myMQTT.Address = knownGoodAddress
+	myMQTT.client = testClient
+	myMQTT.encodedAddress = knownGoodAddress
 	myMQTT.loop(true)
 }
 
 func TestMqttStart(t *testing.T) {
 	myMQTT := defaultTestMQTT()
-	if err := myMQTT.Start(); err == nil {
-		t.Error("Something went wrong; expected a failure to connect!")
+	if err := myMQTT.start(); err != nil {
+		t.Error("Something went wrong; expected to connect!")
 	}
 
-	myMQTT.Stop()
+	myMQTT.stop()
 }
 
 func TestMqttConnect(t *testing.T) {

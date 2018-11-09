@@ -3,63 +3,40 @@ package main
 import (
 	"log"
 
-	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/caarlos0/env"
 )
 
 // Version - Set during compilation when using included Makefile
 var Version = "X.X.X"
 
-var cfgFile string
-var reload = make(chan bool)
-var seattleWasteMQTTCmd = &cobra.Command{
-	Use:   "seattlewaste2mqtt",
-	Short: "Publish Seattle Waste pickup via MQTT",
-	Long:  "Publish Seattle Waste pickup via MQTT",
-	Run: func(cmd *cobra.Command, args []string) {
-		for {
-			log.Printf("Creating the MQTT transport handler")
-			controller := CollectionLookup{}
-			if err := viper.Unmarshal(&controller); err != nil {
-				log.Panicf("Error unmarshaling configuration: %s", err)
-			}
-
-			if err := controller.Start(); err != nil {
-				log.Panicf("Error starting MQTT transport handler: %s", err)
-			}
-
-			<-reload
-			log.Printf("Received Reload Signal")
-			controller.Stop()
-		}
-	},
-}
-
-func init() {
-	cobra.OnInitialize(func() {
-		viper.SetConfigFile(cfgFile)
-		viper.WatchConfig()
-		viper.OnConfigChange(func(e fsnotify.Event) {
-			log.Printf("Configuration Changed: %s", e.Name)
-			reload <- true
-		})
-		viper.SetDefault("control.alertwithin", "24h")
-		viper.SetDefault("control.lookupinterval", "8h")
-
-		log.Printf("Loading Configuration %s", cfgFile)
-		if err := viper.ReadInConfig(); err != nil {
-			log.Fatalf("Error Loading Configuration: %s ", err)
-		}
-		log.Printf("Loaded Configuration %s", cfgFile)
-	})
-
-	seattleWasteMQTTCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", ".seattlewaste2mqtt.yaml", "The path to the configuration file")
-}
-
 func main() {
 	log.Printf("Seattle Waste Version: %s", Version)
-	if err := seattleWasteMQTTCmd.Execute(); err != nil {
-		log.Fatal(err)
+	log.Print("Starting Process")
+
+	controller := collectionLookup{}
+	if err := env.Parse(&controller); err != nil {
+		log.Panicf("Error unmarshaling configuration: %s", err)
 	}
+
+	redactedPassword := ""
+	if len(controller.Password) > 0 {
+		redactedPassword = "<REDACTED>"
+	}
+
+	log.Printf("Environmental Settings:")
+	log.Printf("  * ClientID      : %s", controller.ClientID)
+	log.Printf("  * Broker        : %s", controller.Broker)
+	log.Printf("  * PubTopic      : %s", controller.PubTopic)
+	log.Printf("  * Username      : %s", controller.Username)
+	log.Printf("  * Password      : %s", redactedPassword)
+	log.Printf("  * Address       : %s", controller.Address)
+	log.Printf("  * AlertWithin   : %s", controller.AlertWithin)
+	log.Printf("  * LookupInterval: %s", controller.LookupInterval)
+
+	if err := controller.start(); err != nil {
+		log.Panicf("Error starting collection lookup handler: %s", err)
+	}
+
+	// log.Print("Ending Process")
+	select {}
 }

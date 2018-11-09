@@ -10,7 +10,7 @@ License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)]
 
 ## Via Docker
 ```
-docker run -d --name="seattlewaste2mqtt" -v /the/path/to/config_folder:/config -v /etc/localtime:/etc/localtime:ro mannkind/seattlewaste2mqtt
+docker run -d --name="seattlewaste2mqtt" -v /etc/localtime:/etc/localtime:ro mannkind/seattlewaste2mqtt
 ```
 
 ## Via Make
@@ -18,21 +18,20 @@ docker run -d --name="seattlewaste2mqtt" -v /the/path/to/config_folder:/config -
 git clone https://github.com/mannkind/seattlewaste2mqtt
 cd seattlewaste2mqtt
 make
-./bin/seattlewaste2mqtt -c */the/path/to/config_folder/config.yaml*
+SEATTLEWASTE_ADDRESS="2133 N 61ST ST" ./seattlewaste2mqtt 
 ```
 
 # Configuration
 
-Configuration happens in the config.yaml file. A full example might look this:
+Configuration happens via environmental variables
 
 ```
-settings:
-    clientid: 'GoSeattleWasteMQTT'
-    broker:   'tcp://mosquitto:1883'
-    pubtopic: 'home/seattle_waste'
-
-control:
-    address: '<street address without city/state/zip>'
-    alertwithin: '24h'
-    lookupinterval: '8h'
+SEATTLEWASTE_ADDRESS - The address for which to lookup collections
+SEATTLEWASTE_ALERTWITHIN - [OPTIONAL] The duration for which to alert, defaults to "24h"
+SEATTLEWASTE_LOOKUPINTERVAL - [OPTIONAL] The duration for which to lookup collections, defaults to "8h"
+MQTT_CLIENTID - [OPTIONAL] The clientId, defaults to "DefaultSeattleWaste2MQTTClientID"
+MQTT_BROKER - [OPTIONAL] The MQTT broker, defaults to "tcp://mosquitto.org:1883"
+MQTT_PUBTOPIC - [OPTIONAL] The MQTT topic on which to publish the collection lookup results, defaults to "home/seattle_waste"
+MQTT_USERNAME - [OPTIONAL] The MQTT username, default to ""
+MQTT_PASSWORD - [OPTIONAL] The MQTT password, default to ""
 ```

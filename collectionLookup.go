@@ -28,56 +28,49 @@ type apiResponse struct {
 	Status           string
 }
 
-// CollectionLookup - MQTT all the things!
-type CollectionLookup struct {
-	Client   mqtt.Client
-	Settings struct {
-		ClientID string
-		Broker   string
-		SubTopic string
-		PubTopic string
-		Username string
-		Password string
-	}
-	Control struct {
-		Address        string
-		EncodedAddress string
-		AlertWithin    time.Duration
-		LookupInterval time.Duration
-	}
-	LastPublished string
+type collectionLookup struct {
+	ClientID       string        `env:"MQTT_CLIENTID" envDefault:"DefaultSeattleWaste2MQTTClientID"`
+	Broker         string        `env:"MQTT_BROKER" envDefault:"tcp://mosquitto.org:1883"`
+	PubTopic       string        `env:"MQTT_PUBTOPIC" envDefault:"home/seattle_waste"`
+	Username       string        `env:"MQTT_USERNAME"`
+	Password       string        `env:"MQTT_PASSWORD"`
+	Address        string        `env:"SEATTLEWASTE_ADDRESS,required"`
+	AlertWithin    time.Duration `env:"SEATTLEWASTE_ALERTWITHIN" envDefault:"24h"`
+	LookupInterval time.Duration `env:"SEATTLEWASTE_LOOKUPINTERVAL" envDefault:"8h"`
+
+	client         mqtt.Client
+	encodedAddress string
+	lastPublished  string
 }
 
-// Start - Connect and Subscribe
-func (t *CollectionLookup) Start() error {
-	log.Println("Connecting to MQTT: ", t.Settings.Broker)
+func (t *collectionLookup) start() error {
+	log.Print("Connecting to MQTT")
 	opts := mqtt.NewClientOptions().
-		AddBroker(t.Settings.Broker).
-		SetClientID(t.Settings.ClientID).
+		AddBroker(t.Broker).
+		SetClientID(t.ClientID).
 		SetOnConnectHandler(t.onConnect).
 		SetConnectionLostHandler(func(client mqtt.Client, err error) {
 			log.Printf("Disconnected from MQTT: %s.", err)
 		}).
-		SetUsername(t.Settings.Username).
-		SetPassword(t.Settings.Password)
+		SetUsername(t.Username).
+		SetPassword(t.Password)
 
-	t.Client = mqtt.NewClient(opts)
-	if token := t.Client.Connect(); !token.Wait() || token.Error() != nil {
+	t.client = mqtt.NewClient(opts)
+	if token := t.client.Connect(); !token.Wait() || token.Error() != nil {
 		return token.Error()
 	}
 
 	return nil
 }
 
-// Stop - Disconnect
-func (t *CollectionLookup) Stop() {
-	if t.Client != nil && t.Client.IsConnected() {
-		t.Client.Disconnect(0)
+func (t *collectionLookup) stop() {
+	if t.client != nil && t.client.IsConnected() {
+		t.client.Disconnect(0)
 	}
 }
 
-func (t *CollectionLookup) onConnect(client mqtt.Client) {
-	log.Println("Connected to MQTT")
+func (t *collectionLookup) onConnect(client mqtt.Client) {
+	log.Print("Connected to MQTT")
 
 	if !client.IsConnected() {
 		log.Print("Subscribe Error: Not Connected (Reloading Config?)")
@@ -87,42 +80,42 @@ func (t *CollectionLookup) onConnect(client mqtt.Client) {
 	go t.loop(false)
 }
 
-func (t *CollectionLookup) loop(once bool) {
+func (t *collectionLookup) loop(once bool) {
 	for {
-		log.Println("Beginning address encoding")
+		log.Print("Beginning address encoding")
 		t.encodeAddress()
-		log.Println("Ending address encoding")
+		log.Print("Ending address encoding")
 
-		log.Println("Beginning collection lookup")
+		log.Print("Beginning collection lookup")
 		now := time.Now()
 		if collectionInfo, err := t.collectionLookup(now); collectionInfo.Start != "" && err == nil {
 			t.publishCollectionInfo(collectionInfo)
 		} else {
-			log.Println(err)
+			log.Print(err)
 		}
-		log.Println("Ending collection lookup")
+		log.Print("Ending collection lookup")
 
 		if once {
 			break
 		}
 
-		time.Sleep(t.Control.LookupInterval)
+		time.Sleep(t.LookupInterval)
 	}
 }
 
-func (t *CollectionLookup) encodeAddress() error {
+func (t *collectionLookup) encodeAddress() error {
 	// Only encode the address once
-	if t.Control.EncodedAddress != "" {
+	if t.encodedAddress != "" {
 		return nil
 	}
 
 	// GET the encoded adddress
 	var body io.ReadCloser
-	url := fmt.Sprintf(apiAddressURL, url.QueryEscape(t.Control.Address))
+	url := fmt.Sprintf(apiAddressURL, url.QueryEscape(t.Address))
 	if resp, err := http.Get(url); err == nil && resp.StatusCode == http.StatusOK {
 		body = resp.Body
 	} else {
-		log.Println(err)
+		log.Print(err)
 		return errors.New("Unble to encode the address")
 	}
 
@@ -132,17 +125,17 @@ func (t *CollectionLookup) encodeAddress() error {
 
 	// Store the result
 	if len(result) > 0 {
-		t.Control.EncodedAddress = result[0]
+		t.encodedAddress = result[0]
 	}
 
 	return nil
 }
 
-func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) {
+func (t *collectionLookup) collectionLookup(now time.Time) (apiResponse, error) {
 	noResult := apiResponse{}
 
 	// Guard-clause for a blank encoded address
-	if t.Control.EncodedAddress == "" {
+	if t.encodedAddress == "" {
 		return noResult, errors.New("No encoded address found for collection lookup")
 	}
 
@@ -153,7 +146,7 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 
 	var collectionInfo apiResponse
 	for lastTimestamp < todayTimestamp {
-		encodedAddress := url.QueryEscape(t.Control.EncodedAddress)
+		encodedAddress := url.QueryEscape(t.encodedAddress)
 		timeCheck := url.QueryEscape(fmt.Sprintf("%d", lastTimestamp))
 
 		// Get the collection days
@@ -162,7 +155,7 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 		if resp, err := http.Get(url); err == nil && resp.StatusCode == http.StatusOK {
 			body = resp.Body
 		} else {
-			log.Println(err)
+			log.Print(err)
 			return noResult, errors.New("Unable to fetch collection dates")
 		}
 
@@ -177,7 +170,7 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 		for _, result := range results {
 			pTime, err := time.Parse(apiDateFormat, result.Start)
 			if err != nil {
-				log.Println(err)
+				log.Print(err)
 				continue
 			}
 
@@ -193,10 +186,10 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 	return collectionInfo, nil
 }
 
-func (t *CollectionLookup) publishCollectionInfo(info apiResponse) {
+func (t *collectionLookup) publishCollectionInfo(info apiResponse) {
 	until := info.Date.Sub(time.Now())
 	info.Status = "OFF"
-	if until >= 0 && until <= t.Control.AlertWithin {
+	if until >= 0 && until <= t.AlertWithin {
 		info.Status = "ON"
 	}
 
@@ -206,14 +199,14 @@ func (t *CollectionLookup) publishCollectionInfo(info apiResponse) {
 		return
 	}
 
-	t.publish(t.Client, t.Settings.PubTopic, string(attrBytes))
+	t.publish(t.PubTopic, string(attrBytes))
 }
 
-func (t *CollectionLookup) publish(client mqtt.Client, topic string, payload string) {
+func (t *collectionLookup) publish(topic string, payload string) {
 	retain := true
-	if token := client.Publish(topic, 0, retain, payload); token.Wait() && token.Error() != nil {
+	if token := t.client.Publish(topic, 0, retain, payload); token.Wait() && token.Error() != nil {
 		log.Printf("Publish Error: %s", token.Error())
 	}
-	t.LastPublished = fmt.Sprintf("Publishing - Topic:%s ; Payload: %s", topic, payload)
-	log.Println(t.LastPublished)
+	t.lastPublished = fmt.Sprintf("Publishing - Topic:%s ; Payload: %s", topic, payload)
+	log.Print(t.lastPublished)
 }
