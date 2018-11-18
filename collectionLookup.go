@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/eclipse/paho.mqtt.golang"
@@ -17,7 +19,11 @@ const (
 	apiDateFormat        = "Mon, 2 Jan 2006"
 	apiAddressURL        = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCCAddress?pAddress=%s"
 	apiCollectionDaysURL = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCollectionDays?pAddress=%s&pApp=CC&start=%s"
+	sensorTopicTemplate  = "%s/%s/state"
 )
+
+var binarySensors = []string{"Garbage", "Recycling", "FoodAndYardWaste", "Status"}
+var stringSensors = []string{"Start"}
 
 type apiResponse struct {
 	Start            string
@@ -25,18 +31,21 @@ type apiResponse struct {
 	Recycling        bool
 	FoodAndYardWaste bool
 	Date             time.Time
-	Status           string
+	Status           bool
 }
 
 type collectionLookup struct {
-	ClientID       string        `env:"MQTT_CLIENTID" envDefault:"DefaultSeattleWaste2MQTTClientID"`
-	Broker         string        `env:"MQTT_BROKER" envDefault:"tcp://mosquitto.org:1883"`
-	PubTopic       string        `env:"MQTT_PUBTOPIC" envDefault:"home/seattle_waste"`
-	Username       string        `env:"MQTT_USERNAME"`
-	Password       string        `env:"MQTT_PASSWORD"`
-	Address        string        `env:"SEATTLEWASTE_ADDRESS,required"`
-	AlertWithin    time.Duration `env:"SEATTLEWASTE_ALERTWITHIN" envDefault:"24h"`
-	LookupInterval time.Duration `env:"SEATTLEWASTE_LOOKUPINTERVAL" envDefault:"8h"`
+	ClientID        string        `env:"MQTT_CLIENTID" envDefault:"DefaultSeattleWaste2MQTTClientID"`
+	Broker          string        `env:"MQTT_BROKER" envDefault:"tcp://mosquitto.org:1883"`
+	PubTopic        string        `env:"MQTT_PUBTOPIC" envDefault:"home/seattle_waste"`
+	Discovery       bool          `env:"MQTT_DISCOVERY" envDefault:"false"`
+	DiscoveryPrefix string        `env:"MQTT_DISCOVERYPREFIX" envDefault:"homeassistant"`
+	DiscoveryName   string        `env:"MQTT_DISCOVERYNAME" envDefault:"seattle_waste"`
+	Username        string        `env:"MQTT_USERNAME"`
+	Password        string        `env:"MQTT_PASSWORD"`
+	Address         string        `env:"SEATTLEWASTE_ADDRESS,required"`
+	AlertWithin     time.Duration `env:"SEATTLEWASTE_ALERTWITHIN" envDefault:"24h"`
+	LookupInterval  time.Duration `env:"SEATTLEWASTE_LOOKUPINTERVAL" envDefault:"8h"`
 
 	client         mqtt.Client
 	encodedAddress string
@@ -81,6 +90,10 @@ func (t *collectionLookup) onConnect(client mqtt.Client) {
 }
 
 func (t *collectionLookup) loop(once bool) {
+	if t.Discovery {
+		t.discovery()
+	}
+
 	for {
 		log.Print("Beginning address encoding")
 		t.encodeAddress()
@@ -100,6 +113,28 @@ func (t *collectionLookup) loop(once bool) {
 		}
 
 		time.Sleep(t.LookupInterval)
+	}
+}
+
+func (t *collectionLookup) discovery() {
+	sensorMap := map[string][]string{
+		"binary_sensor": binarySensors,
+		"sensor":        stringSensors,
+	}
+	for sensorType, sensors := range sensorMap {
+		for _, sensor := range sensors {
+			sensorSlug := strings.ToLower(sensor)
+			topic := fmt.Sprintf("%s/%s/%s/%s/config", t.DiscoveryPrefix, sensorType, t.DiscoveryName, sensorSlug)
+			payload := fmt.Sprintf(
+				"{\"name\": \"Seattle Waste %s\",\"state_topic\": \"%s\",\"unique_id\": \"%s.%s\"}",
+				sensor,
+				fmt.Sprintf(sensorTopicTemplate, t.PubTopic, sensorSlug),
+				t.DiscoveryName,
+				sensorSlug,
+			)
+
+			t.publish(topic, payload)
+		}
 	}
 }
 
@@ -188,18 +223,30 @@ func (t *collectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 
 func (t *collectionLookup) publishCollectionInfo(info apiResponse) {
 	until := info.Date.Sub(time.Now())
-	info.Status = "OFF"
-	if until >= 0 && until <= t.AlertWithin {
-		info.Status = "ON"
-	}
+	info.Status = until >= 0 && until <= t.AlertWithin
 
-	// Publish the attributes about the waste to be picked up
-	attrBytes, err := json.Marshal(info)
-	if err != nil {
-		return
+	sensorMap := map[string][]string{
+		"binary_sensor": binarySensors,
+		"sensor":        stringSensors,
 	}
+	for sensorType, sensors := range sensorMap {
+		for _, sensor := range sensors {
+			sensorSlug := strings.ToLower(sensor)
+			sensorValue := reflect.Indirect(reflect.ValueOf(info)).FieldByName(sensor)
+			topic := fmt.Sprintf(sensorTopicTemplate, t.PubTopic, sensorSlug)
+			payload := ""
+			if sensorType == "binary_sensor" {
+				payload = "OFF"
+				if sensorValue.Bool() {
+					payload = "ON"
+				}
+			} else if sensorType == "sensor" {
+				payload = sensorValue.String()
+			}
 
-	t.publish(t.PubTopic, string(attrBytes))
+			t.publish(topic, payload)
+		}
+	}
 }
 
 func (t *collectionLookup) publish(topic string, payload string) {

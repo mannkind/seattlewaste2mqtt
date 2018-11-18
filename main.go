@@ -24,14 +24,17 @@ func main() {
 	}
 
 	log.Printf("Environmental Settings:")
-	log.Printf("  * ClientID      : %s", controller.ClientID)
-	log.Printf("  * Broker        : %s", controller.Broker)
-	log.Printf("  * PubTopic      : %s", controller.PubTopic)
-	log.Printf("  * Username      : %s", controller.Username)
-	log.Printf("  * Password      : %s", redactedPassword)
-	log.Printf("  * Address       : %s", controller.Address)
-	log.Printf("  * AlertWithin   : %s", controller.AlertWithin)
-	log.Printf("  * LookupInterval: %s", controller.LookupInterval)
+	log.Printf("  * ClientID        : %s", controller.ClientID)
+	log.Printf("  * Broker          : %s", controller.Broker)
+	log.Printf("  * PubTopic        : %s", controller.PubTopic)
+	log.Printf("  * Discovery       : %t", controller.Discovery)
+	log.Printf("  * DiscoveryPrefix : %s", controller.DiscoveryPrefix)
+	log.Printf("  * DiscoveryName   : %s", controller.DiscoveryName)
+	log.Printf("  * Username        : %s", controller.Username)
+	log.Printf("  * Password        : %s", redactedPassword)
+	log.Printf("  * Address         : %s", controller.Address)
+	log.Printf("  * AlertWithin     : %s", controller.AlertWithin)
+	log.Printf("  * LookupInterval  : %s", controller.LookupInterval)
 
 	if err := controller.start(); err != nil {
 		log.Panicf("Error starting collection lookup handler: %s", err)
