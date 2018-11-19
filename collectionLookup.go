@@ -52,6 +52,16 @@ type collectionLookup struct {
 	lastPublished  string
 }
 
+// mqttDiscovery - Defines the fields used by this app for HA MQTT discovery
+type mqttDiscovery struct {
+	Name        string `json:"name"`
+	StateTopic  string `json:"state_topic"`
+	UniqueID    string `json:"unique_id,omitempty"`
+	PayloadOn   string `json:"payload_on,omitempty"`
+	PayloadOff  string `json:"payload_off,omitempty"`
+	DeviceClass string `json:"device_class,omitempty"`
+}
+
 func (t *collectionLookup) start() error {
 	log.Print("Connecting to MQTT")
 	opts := mqtt.NewClientOptions().
@@ -124,14 +134,15 @@ func (t *collectionLookup) discovery() {
 	for sensorType, sensors := range sensorMap {
 		for _, sensor := range sensors {
 			sensorSlug := strings.ToLower(sensor)
+			mqd := mqttDiscovery{
+				Name:       fmt.Sprintf("%s %s", t.DiscoveryName, sensor),
+				StateTopic: fmt.Sprintf(sensorTopicTemplate, t.PubTopic, sensorSlug),
+				UniqueID:   fmt.Sprintf("%s.%s", t.DiscoveryName, sensorSlug),
+			}
+
 			topic := fmt.Sprintf("%s/%s/%s/%s/config", t.DiscoveryPrefix, sensorType, t.DiscoveryName, sensorSlug)
-			payload := fmt.Sprintf(
-				"{\"name\": \"Seattle Waste %s\",\"state_topic\": \"%s\",\"unique_id\": \"%s.%s\"}",
-				sensor,
-				fmt.Sprintf(sensorTopicTemplate, t.PubTopic, sensorSlug),
-				t.DiscoveryName,
-				sensorSlug,
-			)
+			payloadBytes, _ := json.Marshal(mqd)
+			payload := string(payloadBytes)
 
 			t.publish(topic, payload)
 		}
