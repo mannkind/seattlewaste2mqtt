@@ -27,14 +27,14 @@ Configuration happens via environmental variables
 
 ```
 SEATTLEWASTE_ADDRESS - The address for which to lookup collections
+SEATTLEWASTE_PUBTOPIC - [OPTIONAL] The MQTT topic on which to publish the collection lookup results, defaults to "home/seattle_waste"
 SEATTLEWASTE_ALERTWITHIN - [OPTIONAL] The duration for which to alert, defaults to "24h"
 SEATTLEWASTE_LOOKUPINTERVAL - [OPTIONAL] The duration for which to lookup collections, defaults to "8h"
+SEATTLEWASTE_DISCOVERY - [OPTIONAL] The MQTT discovery flag for Home Assistant, defaults to false
+SEATTLEWASTE_DISCOVERYPREFIX - [OPTIONAL] The MQTT discovery prefix for Home Assistant, defaults to "homeassistant"
+SEATTLEWASTE_DISCOVERYNAME - [OPTIONAL] The MQTT discovery name for Home Assistant, defaults to "seattle_waste"
 MQTT_CLIENTID - [OPTIONAL] The clientId, defaults to "DefaultSeattleWaste2MQTTClientID"
 MQTT_BROKER - [OPTIONAL] The MQTT broker, defaults to "tcp://mosquitto.org:1883"
-MQTT_PUBTOPIC - [OPTIONAL] The MQTT topic on which to publish the collection lookup results, defaults to "home/seattle_waste"
 MQTT_USERNAME - [OPTIONAL] The MQTT username, default to ""
 MQTT_PASSWORD - [OPTIONAL] The MQTT password, default to ""
-MQTT_DISCOVERY - [OPTIONAL] The MQTT discovery flag for Home Assistant, defaults to false
-MQTT_DISCOVERYPREFIX - [OPTIONAL] The MQTT discovery prefix for Home Assistant, defaults to "homeassistant"
-MQTT_DISCOVERYNAME - [OPTIONAL] The MQTT discovery name for Home Assistant, defaults to "seattle_waste"
 ```
