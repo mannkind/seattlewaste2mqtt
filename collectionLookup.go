@@ -177,8 +177,9 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 		return noResult, errors.New("No encoded address found for collection lookup")
 	}
 
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
-	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	localLoc, _ := time.LoadLocation("Local")
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, localLoc)
+	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, localLoc)
 	lastTimestamp := firstOfMonth.Unix()
 	todayTimestamp := today.Unix()
 
@@ -206,7 +207,7 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 
 		// Results from the 'web-service' do not always return as expected
 		for _, result := range results {
-			pTime, err := time.Parse(apiDateFormat, result.Start)
+			pTime, err := time.ParseInLocation(apiDateFormat, result.Start, localLoc)
 			if err != nil {
 				log.Print(err)
 				continue
