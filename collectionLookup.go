@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 const (
@@ -30,7 +31,7 @@ type CollectionLookup struct {
 	discovery       bool
 	discoveryPrefix string
 	discoveryName   string
-	pubTopic        string
+	topicPrefix     string
 	address         string
 	alertWithin     time.Duration
 	lookupInterval  time.Duration
@@ -46,7 +47,7 @@ func NewCollectionLookup(config *Config, mqttFuncWrapper *MQTTFuncWrapper) *Coll
 		discovery:       config.Discovery,
 		discoveryPrefix: config.DiscoveryPrefix,
 		discoveryName:   config.DiscoveryName,
-		pubTopic:        config.PubTopic,
+		topicPrefix:     config.TopicPrefix,
 		address:         config.Address,
 		alertWithin:     config.AlertWithin,
 		lookupInterval:  config.LookupInterval,
@@ -105,7 +106,7 @@ func (t *CollectionLookup) publishDiscovery() {
 			sensorSlug := strings.ToLower(sensor)
 			mqd := mqttDiscovery{
 				Name:       fmt.Sprintf("%s %s", t.discoveryName, sensor),
-				StateTopic: fmt.Sprintf(sensorTopicTemplate, t.pubTopic, sensorSlug),
+				StateTopic: fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensorSlug),
 				UniqueID:   fmt.Sprintf("%s.%s", t.discoveryName, sensorSlug),
 			}
 
@@ -233,18 +234,21 @@ func (t *CollectionLookup) publishCollectionInfo(info apiResponse) {
 		"binary_sensor": binarySensors,
 		"sensor":        stringSensors,
 	}
-	for sensorType, sensors := range sensorMap {
+	for _, sensors := range sensorMap {
 		for _, sensor := range sensors {
 			sensorSlug := strings.ToLower(sensor)
 			sensorValue := reflect.Indirect(reflect.ValueOf(info)).FieldByName(sensor)
-			topic := fmt.Sprintf(sensorTopicTemplate, t.pubTopic, sensorSlug)
+			topic := fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensorSlug)
 			payload := ""
-			if sensorType == "binary_sensor" {
+			switch sensorValue.Kind() {
+			case reflect.Bool:
 				payload = "OFF"
 				if sensorValue.Bool() {
 					payload = "ON"
 				}
-			} else if sensorType == "sensor" {
+			case reflect.Int:
+				payload = strconv.FormatInt(sensorValue.Int(), 10)
+			case reflect.String:
 				payload = sensorValue.String()
 			}
 

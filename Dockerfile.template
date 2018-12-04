@@ -9,4 +9,4 @@ FROM __BASEIMAGE_ARCH__/alpine:3.8
 COPY --from=build /go/src/app/seattlewaste2mqtt /usr/local/bin/seattlewaste2mqtt
 VOLUME /config
 RUN apk add --no-cache --update ca-certificates
-CMD ["seattlewaste2mqtt", "-c", "/config/config.yaml"]
+CMD ["seattlewaste2mqtt"]

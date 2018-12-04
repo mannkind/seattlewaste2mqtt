@@ -13,10 +13,10 @@ type Config struct {
 	Broker          string        `env:"MQTT_BROKER" envDefault:"tcp://mosquitto.org:1883"`
 	Username        string        `env:"MQTT_USERNAME"`
 	Password        string        `env:"MQTT_PASSWORD"`
-	Discovery       bool          `env:"SEATTLEWASTE_DISCOVERY" envDefault:"false"`
-	DiscoveryPrefix string        `env:"SEATTLEWASTE_DISCOVERYPREFIX" envDefault:"homeassistant"`
-	DiscoveryName   string        `env:"SEATTLEWASTE_DISCOVERYNAME" envDefault:"seattle_waste"`
-	PubTopic        string        `env:"SEATTLEWASTE_PUBTOPIC" envDefault:"home/seattle_waste"`
+	Discovery       bool          `env:"MQTT_DISCOVERY" envDefault:"false"`
+	DiscoveryPrefix string        `env:"MQTT_DISCOVERYPREFIX" envDefault:"homeassistant"`
+	DiscoveryName   string        `env:"MQTT_DISCOVERYNAME" envDefault:"seattle_waste"`
+	TopicPrefix     string        `env:"SEATTLEWASTE_TOPICPREFIX" envDefault:"home/seattle_waste"`
 	Address         string        `env:"SEATTLEWASTE_ADDRESS,required"`
 	AlertWithin     time.Duration `env:"SEATTLEWASTE_ALERTWITHIN" envDefault:"24h"`
 	LookupInterval  time.Duration `env:"SEATTLEWASTE_LOOKUPINTERVAL" envDefault:"8h"`
@@ -43,7 +43,7 @@ func NewConfig() *Config {
 	log.Printf("  * Discovery       : %t", c.Discovery)
 	log.Printf("  * DiscoveryPrefix : %s", c.DiscoveryPrefix)
 	log.Printf("  * DiscoveryName   : %s", c.DiscoveryName)
-	log.Printf("  * PubTopic        : %s", c.PubTopic)
+	log.Printf("  * TopicPrefix     : %s", c.TopicPrefix)
 	log.Printf("  * Address         : %s", c.Address)
 	log.Printf("  * AlertWithin     : %s", c.AlertWithin)
 	log.Printf("  * LookupInterval  : %s", c.LookupInterval)

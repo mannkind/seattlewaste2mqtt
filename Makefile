@@ -1,12 +1,11 @@
 GOCMD=go
-GOGENEREATE=$(GOCMD) generate
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOFMT=$(GOCMD) fmt
 GOVET=$(GOCMD) vet
-WIRECMD=wire gen
+WIRECMD=$$GOPATH/bin/wire gen
 BINARY_NAME=seattlewaste2mqtt
 BINARY_VERSION=$(shell git describe --tags --always --dirty="-dev")
 BINARY_DATE=$(shell date -u '+%Y-%m-%d-%H%M UTC')
@@ -15,7 +14,7 @@ DOCKER_IMAGE=mannkind/seattlewaste2mqtt
 DOCKER_ARCHS=amd64 arm32v6 arm64v8
 DOCKER_VERSION=latest
 
-all: clean generate wire build test format vet
+all: clean wire build test format vet
 test: 
 		$(GOTEST) --coverprofile=/tmp/app.cover -v ./...
 format:
@@ -25,13 +24,11 @@ clean:
 		rm -f $(BINARY_NAME)
 vet:
 	    $(GOVET) .
-generate: 
-		$(GOGENERATE)
 get_wire:
-		$(GOGET) github.com/google/go-cloud/wire/cmd/wire
+		$(GOGET) github.com/google/wire/cmd/wire
 wire: get_wire
 		$(WIRECMD)
-build: format generate
+build: format
 		$(GOBUILD) $(BINARY_VERSION_FLAGS) -o $(BINARY_NAME) -v
 run: build
 		./$(BINARY_NAME)

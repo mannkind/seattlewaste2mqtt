@@ -7,12 +7,15 @@ import (
 type newMqttClientOptsFunc func() *mqtt.ClientOptions
 type newMqttClientFunc func(*mqtt.ClientOptions) mqtt.Client
 type mqttDiscovery struct {
-	Name        string `json:"name"`
-	StateTopic  string `json:"state_topic"`
-	UniqueID    string `json:"unique_id,omitempty"`
-	PayloadOn   string `json:"payload_on,omitempty"`
-	PayloadOff  string `json:"payload_off,omitempty"`
-	DeviceClass string `json:"device_class,omitempty"`
+	Name              string `json:"name"`
+	StateTopic        string `json:"state_topic"`
+	CommandTopic      string `json:"command_topic,omitempty"`
+	UniqueID          string `json:"unique_id,omitempty"`
+	PayloadOn         string `json:"payload_on,omitempty"`
+	PayloadOff        string `json:"payload_off,omitempty"`
+	DeviceClass       string `json:"device_class,omitempty"`
+	Icon              string `json:"icon,omitempty"`
+	UnitOfMeasurement string `json:"unit_of_measurement,omitempty"`
 }
 
 // MQTTFuncWrapper - Wraps the functions needed to create a new MQTT client.
