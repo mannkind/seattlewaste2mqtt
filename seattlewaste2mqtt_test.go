@@ -1,14 +1,16 @@
 package main
 
 import (
+	mqttExtCfg "github.com/mannkind/paho.mqtt.golang.ext/cfg"
+	mqttExtDI "github.com/mannkind/paho.mqtt.golang.ext/di"
 	"testing"
 	"time"
 )
 
 const knownGoodAddress = "2133 N 61ST ST"
 
-func defaultCollectionLookup() *CollectionLookup {
-	c := NewCollectionLookup(NewConfig(), NewMQTTFuncWrapper())
+func defaultSeattleWaste2Mqtt() *SeattleWaste2Mqtt {
+	c := NewSeattleWaste2Mqtt(NewConfig(mqttExtCfg.NewMQTTConfig()), mqttExtDI.NewMQTTFuncWrapper())
 	return c
 }
 
@@ -21,7 +23,7 @@ func TestEncodeAddress(t *testing.T) {
 		{"12448 Fake Road Drive", ""},
 	}
 
-	c := defaultCollectionLookup()
+	c := defaultSeattleWaste2Mqtt()
 	c.onConnect(c.client)
 
 	for _, v := range tests {
@@ -34,7 +36,7 @@ func TestEncodeAddress(t *testing.T) {
 	}
 }
 
-func TestCollectionLookup(t *testing.T) {
+func TestSeattleWaste2Mqtt(t *testing.T) {
 	var tests = []struct {
 		date string
 	}{
@@ -43,7 +45,7 @@ func TestCollectionLookup(t *testing.T) {
 		{"June 1st, 2017"},
 	}
 
-	c := defaultCollectionLookup()
+	c := defaultSeattleWaste2Mqtt()
 	c.address = knownGoodAddress
 	c.encodedAddress = knownGoodAddress
 
@@ -57,15 +59,15 @@ func TestCollectionLookup(t *testing.T) {
 	}
 }
 
-func TestCollectionLookupLoop(t *testing.T) {
-	c := defaultCollectionLookup()
+func TestSeattleWaste2MqttLoop(t *testing.T) {
+	c := defaultSeattleWaste2Mqtt()
 	c.address = knownGoodAddress
 	c.encodedAddress = knownGoodAddress
 	c.loop(true)
 }
 
 func TestMqttRun(t *testing.T) {
-	c := defaultCollectionLookup()
+	c := defaultSeattleWaste2Mqtt()
 	if err := c.Run(); err != nil {
 		t.Error("Something went wrong; expected to connect!")
 	}
@@ -74,6 +76,6 @@ func TestMqttRun(t *testing.T) {
 }
 
 func TestMqttConnect(t *testing.T) {
-	c := defaultCollectionLookup()
+	c := defaultSeattleWaste2Mqtt()
 	c.onConnect(c.client)
 }

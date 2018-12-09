@@ -1,4 +1,4 @@
-# Seattle Waste MQTT
+# seattlewaste2mqtt
 
 [![Software
 License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)](https://github.com/mannkind/seattlewaste2mqtt/blob/master/LICENSE.md)

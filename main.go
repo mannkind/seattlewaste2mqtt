@@ -8,9 +8,9 @@ import (
 var Version = "X.X.X"
 
 func main() {
-	log.Printf("Seattle Waste Version: %s", Version)
+	log.Printf("seattlewaste2mqtt Version: %s", Version)
 
-	cl := InitializeCollectionLookup()
+	cl := Initialize()
 	if err := cl.Run(); err != nil {
 		log.Panicf("Error starting collection lookup process: %s", err)
 	}

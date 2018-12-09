@@ -5,11 +5,17 @@
 
 package main
 
+import (
+	"github.com/mannkind/paho.mqtt.golang.ext/cfg"
+	"github.com/mannkind/paho.mqtt.golang.ext/di"
+)
+
 // Injectors from wire.go:
 
-func InitializeCollectionLookup() *CollectionLookup {
-	config := NewConfig()
-	mqttFuncWrapper := NewMQTTFuncWrapper()
-	collectionLookup := NewCollectionLookup(config, mqttFuncWrapper)
-	return collectionLookup
+func Initialize() *SeattleWaste2Mqtt {
+	mqttConfig := cfg.NewMQTTConfig()
+	config := NewConfig(mqttConfig)
+	mqttFuncWrapper := di.NewMQTTFuncWrapper()
+	seattleWaste2Mqtt := NewSeattleWaste2Mqtt(config, mqttFuncWrapper)
+	return seattleWaste2Mqtt
 }

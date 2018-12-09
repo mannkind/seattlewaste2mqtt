@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	mqttExtDI "github.com/mannkind/paho.mqtt.golang.ext/di"
+	mqttExtHA "github.com/mannkind/paho.mqtt.golang.ext/ha"
 )
 
 const (
@@ -26,8 +26,8 @@ const (
 var binarySensors = []string{"Garbage", "Recycling", "FoodAndYardWaste", "Status"}
 var stringSensors = []string{"Start"}
 
-// CollectionLookup - Lookup collection information on seattle.gov.
-type CollectionLookup struct {
+// SeattleWaste2Mqtt - Lookup collection information on seattle.gov.
+type SeattleWaste2Mqtt struct {
 	discovery       bool
 	discoveryPrefix string
 	discoveryName   string
@@ -38,37 +38,36 @@ type CollectionLookup struct {
 
 	client         mqtt.Client
 	encodedAddress string
-	lastPublished  string
 }
 
-// NewCollectionLookup - Returns a new, configured CollectionLoookup object.
-func NewCollectionLookup(config *Config, mqttFuncWrapper *MQTTFuncWrapper) *CollectionLookup {
-	cl := CollectionLookup{
-		discovery:       config.Discovery,
-		discoveryPrefix: config.DiscoveryPrefix,
-		discoveryName:   config.DiscoveryName,
-		topicPrefix:     config.TopicPrefix,
+// NewSeattleWaste2Mqtt - Returns a new reference to a fully configured object.
+func NewSeattleWaste2Mqtt(config *Config, mqttFuncWrapper *mqttExtDI.MQTTFuncWrapper) *SeattleWaste2Mqtt {
+	cl := SeattleWaste2Mqtt{
+		discovery:       config.MQTT.Discovery,
+		discoveryPrefix: config.MQTT.DiscoveryPrefix,
+		discoveryName:   config.MQTT.DiscoveryName,
+		topicPrefix:     config.MQTT.TopicPrefix,
 		address:         config.Address,
 		alertWithin:     config.AlertWithin,
 		lookupInterval:  config.LookupInterval,
 	}
 
 	opts := mqttFuncWrapper.
-		clientOptsFunc().
-		AddBroker(config.Broker).
-		SetClientID(config.ClientID).
+		ClientOptsFunc().
+		AddBroker(config.MQTT.Broker).
+		SetClientID(config.MQTT.ClientID).
 		SetOnConnectHandler(cl.onConnect).
 		SetConnectionLostHandler(cl.onDisconnect).
-		SetUsername(config.Username).
-		SetPassword(config.Password)
+		SetUsername(config.MQTT.Username).
+		SetPassword(config.MQTT.Password)
 
-	cl.client = mqttFuncWrapper.clientFunc(opts)
+	cl.client = mqttFuncWrapper.ClientFunc(opts)
 
 	return &cl
 }
 
 // Run - Start the collection lookup process
-func (t *CollectionLookup) Run() error {
+func (t *SeattleWaste2Mqtt) Run() error {
 	log.Print("Connecting to MQTT")
 	if token := t.client.Connect(); !token.Wait() || token.Error() != nil {
 		return token.Error()
@@ -77,7 +76,7 @@ func (t *CollectionLookup) Run() error {
 	return nil
 }
 
-func (t *CollectionLookup) onConnect(client mqtt.Client) {
+func (t *SeattleWaste2Mqtt) onConnect(client mqtt.Client) {
 	log.Print("Connected to MQTT")
 
 	if !client.IsConnected() {
@@ -92,34 +91,43 @@ func (t *CollectionLookup) onConnect(client mqtt.Client) {
 	go t.loop(false)
 }
 
-func (t *CollectionLookup) onDisconnect(client mqtt.Client, err error) {
+func (t *SeattleWaste2Mqtt) onDisconnect(client mqtt.Client, err error) {
 	log.Printf("Disconnected from MQTT: %s.", err)
 }
 
-func (t *CollectionLookup) publishDiscovery() {
-	sensorMap := map[string][]string{
-		"binary_sensor": binarySensors,
-		"sensor":        stringSensors,
-	}
-	for sensorType, sensors := range sensorMap {
-		for _, sensor := range sensors {
-			sensorSlug := strings.ToLower(sensor)
-			mqd := mqttDiscovery{
-				Name:       fmt.Sprintf("%s %s", t.discoveryName, sensor),
-				StateTopic: fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensorSlug),
-				UniqueID:   fmt.Sprintf("%s.%s", t.discoveryName, sensorSlug),
-			}
+func (t *SeattleWaste2Mqtt) publishDiscovery() {
+	obj := reflect.ValueOf(apiResponse{})
+	for i := 0; i < obj.NumField(); i++ {
+		sensor := strings.ToLower(obj.Type().Field(i).Name)
+		val := obj.Field(i)
+		sensorType := ""
 
-			topic := fmt.Sprintf("%s/%s/%s/%s/config", t.discoveryPrefix, sensorType, t.discoveryName, sensorSlug)
-			payloadBytes, _ := json.Marshal(mqd)
-			payload := string(payloadBytes)
-
-			t.publish(topic, payload)
+		switch val.Kind() {
+		case reflect.Bool:
+			sensorType = "binary_sensor"
+		case reflect.String:
+			sensorType = "sensor"
 		}
+
+		if sensorType == "" {
+			continue
+		}
+
+		mqd := mqttExtHA.MQTTDiscovery{
+			DiscoveryPrefix: t.discoveryPrefix,
+			Component:       sensorType,
+			NodeID:          t.discoveryName,
+			ObjectID:        sensor,
+			Name:            fmt.Sprintf("%s %s", t.discoveryName, sensor),
+			StateTopic:      fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensor),
+			UniqueID:        fmt.Sprintf("%s.%s", t.discoveryName, sensor),
+		}
+
+		mqd.PublishDiscovery(t.client)
 	}
 }
 
-func (t *CollectionLookup) loop(once bool) {
+func (t *SeattleWaste2Mqtt) loop(once bool) {
 	for {
 		log.Print("Beginning address encoding")
 		t.encodeAddress()
@@ -142,25 +150,23 @@ func (t *CollectionLookup) loop(once bool) {
 	}
 }
 
-func (t *CollectionLookup) encodeAddress() error {
+func (t *SeattleWaste2Mqtt) encodeAddress() error {
 	// Only encode the address once
 	if t.encodedAddress != "" {
 		return nil
 	}
 
 	// GET the encoded adddress
-	var body io.ReadCloser
 	url := fmt.Sprintf(apiAddressURL, url.QueryEscape(t.address))
-	if resp, err := http.Get(url); err == nil && resp.StatusCode == http.StatusOK {
-		body = resp.Body
-	} else {
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode != http.StatusOK {
 		log.Print(err)
 		return errors.New("Unble to encode the address")
 	}
 
 	// Decode the response
 	var result []string
-	json.NewDecoder(body).Decode(&result)
+	json.NewDecoder(resp.Body).Decode(&result)
 
 	// Store the result
 	if len(result) > 0 {
@@ -170,7 +176,7 @@ func (t *CollectionLookup) encodeAddress() error {
 	return nil
 }
 
-func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) {
+func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (apiResponse, error) {
 	noResult := apiResponse{}
 
 	// Guard-clause for a blank encoded address
@@ -190,17 +196,15 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 		timeCheck := url.QueryEscape(fmt.Sprintf("%d", lastTimestamp))
 
 		// Get the collection days
-		var body io.ReadCloser
 		url := fmt.Sprintf(apiCollectionDaysURL, encodedAddress, timeCheck)
-		if resp, err := http.Get(url); err == nil && resp.StatusCode == http.StatusOK {
-			body = resp.Body
-		} else {
+		resp, err := http.Get(url)
+		if err != nil || resp.StatusCode != http.StatusOK {
 			log.Print(err)
 			return noResult, errors.New("Unable to fetch collection dates")
 		}
 
 		var results []apiResponse
-		json.NewDecoder(body).Decode(&results)
+		json.NewDecoder(resp.Body).Decode(&results)
 
 		if len(results) == 0 {
 			return noResult, errors.New("No collection dates returned")
@@ -226,42 +230,41 @@ func (t *CollectionLookup) collectionLookup(now time.Time) (apiResponse, error) 
 	return collectionInfo, nil
 }
 
-func (t *CollectionLookup) publishCollectionInfo(info apiResponse) {
+func (t *SeattleWaste2Mqtt) publishCollectionInfo(info apiResponse) {
 	until := info.Date.Sub(time.Now())
 	info.Status = until >= 0 && until <= t.alertWithin
 
-	sensorMap := map[string][]string{
-		"binary_sensor": binarySensors,
-		"sensor":        stringSensors,
-	}
-	for _, sensors := range sensorMap {
-		for _, sensor := range sensors {
-			sensorSlug := strings.ToLower(sensor)
-			sensorValue := reflect.Indirect(reflect.ValueOf(info)).FieldByName(sensor)
-			topic := fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensorSlug)
-			payload := ""
-			switch sensorValue.Kind() {
-			case reflect.Bool:
-				payload = "OFF"
-				if sensorValue.Bool() {
-					payload = "ON"
-				}
-			case reflect.Int:
-				payload = strconv.FormatInt(sensorValue.Int(), 10)
-			case reflect.String:
-				payload = sensorValue.String()
-			}
+	obj := reflect.ValueOf(info)
+	for i := 0; i < obj.NumField(); i++ {
+		sensor := strings.ToLower(obj.Type().Field(i).Name)
+		val := obj.Field(i)
 
-			t.publish(topic, payload)
+		topic := fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensor)
+		payload := ""
+
+		switch val.Kind() {
+		case reflect.Bool:
+			payload = "OFF"
+			if val.Bool() {
+				payload = "ON"
+			}
+		case reflect.String:
+			payload = val.String()
 		}
+
+		if payload == "" {
+			continue
+		}
+
+		t.publish(topic, payload)
 	}
 }
 
-func (t *CollectionLookup) publish(topic string, payload string) {
+func (t *SeattleWaste2Mqtt) publish(topic string, payload string) {
 	retain := true
 	if token := t.client.Publish(topic, 0, retain, payload); token.Wait() && token.Error() != nil {
 		log.Printf("Publish Error: %s", token.Error())
 	}
-	t.lastPublished = fmt.Sprintf("Publishing - Topic:%s ; Payload: %s", topic, payload)
-	log.Print(t.lastPublished)
+
+	log.Print(fmt.Sprintf("Publishing - Topic: %s ; Payload: %s", topic, payload))
 }
