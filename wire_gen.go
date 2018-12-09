@@ -7,9 +7,9 @@ package main
 
 // Injectors from wire.go:
 
-func InitializeCollectionLookup() *CollectionLookup {
+func Initialize() *SeattleWaste2Mqtt {
 	config := NewConfig()
 	mqttFuncWrapper := NewMQTTFuncWrapper()
-	collectionLookup := NewCollectionLookup(config, mqttFuncWrapper)
-	return collectionLookup
+	seattleWaste2Mqtt := NewSeattleWaste2Mqtt(config, mqttFuncWrapper)
+	return seattleWaste2Mqtt
 }

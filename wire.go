@@ -6,9 +6,9 @@ import (
 	"github.com/google/wire"
 )
 
-// InitializeCollectionLookup - Compile-time DI
-func InitializeCollectionLookup() *CollectionLookup {
-	wire.Build(NewConfig, NewMQTTFuncWrapper, NewCollectionLookup)
+// Initialize - Compile-time DI
+func Initialize() *SeattleWaste2Mqtt {
+	wire.Build(NewConfig, NewMQTTFuncWrapper, NewSeattleWaste2Mqtt)
 
-	return &CollectionLookup{}
+	return &SeattleWaste2Mqtt{}
 }
