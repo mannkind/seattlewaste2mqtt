@@ -22,6 +22,12 @@ format:
 clean: 
 		$(GOCLEAN)
 		rm -f $(BINARY_NAME)
+		{ \
+		for arch in $(DOCKER_ARCHS); do \
+			rm -f Dockerfile.$${arch} ;\
+		done ;\
+		}
+
 vet:
 	    $(GOVET) .
 get_wire:

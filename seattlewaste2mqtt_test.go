@@ -1,10 +1,11 @@
 package main
 
 import (
-	mqttExtCfg "github.com/mannkind/paho.mqtt.golang.ext/cfg"
-	mqttExtDI "github.com/mannkind/paho.mqtt.golang.ext/di"
 	"testing"
 	"time"
+
+	mqttExtCfg "github.com/mannkind/paho.mqtt.golang.ext/cfg"
+	mqttExtDI "github.com/mannkind/paho.mqtt.golang.ext/di"
 )
 
 const knownGoodAddress = "2133 N 61ST ST"
@@ -51,7 +52,7 @@ func TestSeattleWaste2Mqtt(t *testing.T) {
 
 	layout := "2006-01-02"
 	for _, v := range tests {
-		now, err := time.Parse(layout, v.date)
+		now, _ := time.Parse(layout, v.date)
 		collectionInfo, err := c.collectionLookup(now)
 		if collectionInfo.Start == "" || err != nil {
 			t.Errorf("Error looking up collection info")

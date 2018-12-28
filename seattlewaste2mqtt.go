@@ -1,12 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
-	"net/http"
-	"net/url"
 	"reflect"
 	"strings"
 	"time"
@@ -14,13 +10,15 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	mqttExtDI "github.com/mannkind/paho.mqtt.golang.ext/di"
 	mqttExtHA "github.com/mannkind/paho.mqtt.golang.ext/ha"
+	resty "gopkg.in/resty.v1"
 )
 
 const (
 	apiDateFormat        = "Mon, 2 Jan 2006"
-	apiAddressURL        = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCCAddress?pAddress=%s"
-	apiCollectionDaysURL = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCollectionDays?pAddress=%s&pApp=CC&Start=%s"
+	apiAddressURL        = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCCAddress"
+	apiCollectionDaysURL = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCollectionDays"
 	sensorTopicTemplate  = "%s/%s/state"
+	maxAPIAttempts       = 5
 )
 
 var binarySensors = []string{"Garbage", "Recycling", "FoodAndYardWaste", "Status"}
@@ -78,11 +76,6 @@ func (t *SeattleWaste2Mqtt) Run() error {
 
 func (t *SeattleWaste2Mqtt) onConnect(client mqtt.Client) {
 	log.Print("Connected to MQTT")
-
-	if !client.IsConnected() {
-		log.Print("Subscribe Error: Not Connected (Reloading Config?)")
-		return
-	}
 
 	if t.discovery {
 		t.publishDiscovery()
@@ -156,18 +149,20 @@ func (t *SeattleWaste2Mqtt) encodeAddress() error {
 		return nil
 	}
 
-	// GET the encoded adddress
-	url := fmt.Sprintf(apiAddressURL, url.QueryEscape(t.address))
-	resp, err := http.Get(url)
-	if err != nil || resp.StatusCode != http.StatusOK {
+	resp, err := resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetResult([]string{}).
+		SetQueryParams(map[string]string{
+			"pAddress": t.address,
+		}).
+		Get(apiAddressURL)
+
+	if err != nil {
 		log.Print(err)
-		return errors.New("Unble to encode the address")
+		return fmt.Errorf("Unable to encode the address %s", t.address)
 	}
 
-	// Decode the response
-	var result []string
-	json.NewDecoder(resp.Body).Decode(&result)
-
+	result := (*resp.Result().(*[]string))
 	// Store the result
 	if len(result) > 0 {
 		t.encodedAddress = result[0]
@@ -181,7 +176,7 @@ func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (apiResponse, error)
 
 	// Guard-clause for a blank encoded address
 	if t.encodedAddress == "" {
-		return noResult, errors.New("No encoded address found for collection lookup")
+		return noResult, fmt.Errorf("No encoded address found for collection lookup")
 	}
 
 	localLoc, _ := time.LoadLocation("Local")
@@ -189,25 +184,29 @@ func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (apiResponse, error)
 	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, localLoc)
 	lastTimestamp := firstOfMonth.Unix()
 	todayTimestamp := today.Unix()
+	apiCallCount := 0
 
-	var collectionInfo apiResponse
-	for lastTimestamp < todayTimestamp {
-		encodedAddress := url.QueryEscape(t.encodedAddress)
-		timeCheck := url.QueryEscape(fmt.Sprintf("%d", lastTimestamp))
+	for lastTimestamp < todayTimestamp && apiCallCount <= maxAPIAttempts {
+		resp, err := resty.R().
+			SetHeader("Content-Type", "application/json").
+			SetResult([]apiResponse{}).
+			SetQueryParams(map[string]string{
+				"pAddress": t.encodedAddress,
+				"pApp":     "CC",
+				"Start":    fmt.Sprintf("%d", lastTimestamp),
+			}).
+			Get(apiCollectionDaysURL)
 
-		// Get the collection days
-		url := fmt.Sprintf(apiCollectionDaysURL, encodedAddress, timeCheck)
-		resp, err := http.Get(url)
-		if err != nil || resp.StatusCode != http.StatusOK {
+		if err != nil {
 			log.Print(err)
-			return noResult, errors.New("Unable to fetch collection dates")
+			return noResult, fmt.Errorf("Unable to fetch collection dates")
 		}
 
-		var results []apiResponse
-		json.NewDecoder(resp.Body).Decode(&results)
+		apiCallCount++
 
+		results := (*resp.Result().(*[]apiResponse))
 		if len(results) == 0 {
-			return noResult, errors.New("No collection dates returned")
+			return noResult, fmt.Errorf("No collection dates returned")
 		}
 
 		// Results from the 'web-service' do not always return as expected
@@ -220,19 +219,18 @@ func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (apiResponse, error)
 
 			lastTimestamp = pTime.Unix()
 			if lastTimestamp >= todayTimestamp {
-				collectionInfo = result
-				collectionInfo.Date = pTime
-				break
+				result.Date = pTime
+				return result, nil
 			}
 		}
 	}
 
-	return collectionInfo, nil
+	return noResult, nil
 }
 
 func (t *SeattleWaste2Mqtt) publishCollectionInfo(info apiResponse) {
 	until := info.Date.Sub(time.Now())
-	info.Status = until >= 0 && until <= t.alertWithin
+	info.Status = 0 <= until && until <= t.alertWithin
 
 	obj := reflect.ValueOf(info)
 	for i := 0; i < obj.NumField(); i++ {
