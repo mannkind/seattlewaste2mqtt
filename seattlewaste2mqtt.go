@@ -57,7 +57,8 @@ func NewSeattleWaste2Mqtt(config *Config, mqttFuncWrapper *mqttExtDI.MQTTFuncWra
 		SetOnConnectHandler(cl.onConnect).
 		SetConnectionLostHandler(cl.onDisconnect).
 		SetUsername(config.MQTT.Username).
-		SetPassword(config.MQTT.Password)
+		SetPassword(config.MQTT.Password).
+		SetWill(cl.availabilityTopic(), "offline", 0, true)
 
 	cl.client = mqttFuncWrapper.ClientFunc(opts)
 
@@ -76,10 +77,8 @@ func (t *SeattleWaste2Mqtt) Run() error {
 
 func (t *SeattleWaste2Mqtt) onConnect(client mqtt.Client) {
 	log.Print("Connected to MQTT")
-
-	if t.discovery {
-		t.publishDiscovery()
-	}
+	t.publish(t.availabilityTopic(), "online")
+	t.publishDiscovery()
 
 	go t.loop(false)
 }
@@ -88,7 +87,15 @@ func (t *SeattleWaste2Mqtt) onDisconnect(client mqtt.Client, err error) {
 	log.Printf("Disconnected from MQTT: %s.", err)
 }
 
+func (t *SeattleWaste2Mqtt) availabilityTopic() string {
+	return fmt.Sprintf("%s/status", t.topicPrefix)
+}
+
 func (t *SeattleWaste2Mqtt) publishDiscovery() {
+	if !t.discovery {
+		return
+	}
+
 	obj := reflect.ValueOf(apiResponse{})
 	for i := 0; i < obj.NumField(); i++ {
 		sensor := strings.ToLower(obj.Type().Field(i).Name)
@@ -111,9 +118,11 @@ func (t *SeattleWaste2Mqtt) publishDiscovery() {
 			Component:       sensorType,
 			NodeID:          t.discoveryName,
 			ObjectID:        sensor,
-			Name:            fmt.Sprintf("%s %s", t.discoveryName, sensor),
-			StateTopic:      fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensor),
-			UniqueID:        fmt.Sprintf("%s.%s", t.discoveryName, sensor),
+
+			AvailabilityTopic: t.availabilityTopic(),
+			Name:              fmt.Sprintf("%s %s", t.discoveryName, sensor),
+			StateTopic:        fmt.Sprintf(sensorTopicTemplate, t.topicPrefix, sensor),
+			UniqueID:          fmt.Sprintf("%s.%s", t.discoveryName, sensor),
 		}
 
 		mqd.PublishDiscovery(t.client)
