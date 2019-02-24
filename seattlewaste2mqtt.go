@@ -72,6 +72,8 @@ func (t *SeattleWaste2Mqtt) Run() error {
 		return token.Error()
 	}
 
+	t.loop(false)
+
 	return nil
 }
 
@@ -79,8 +81,6 @@ func (t *SeattleWaste2Mqtt) onConnect(client mqtt.Client) {
 	log.Print("Connected to MQTT")
 	t.publish(t.availabilityTopic(), "online")
 	t.publishDiscovery()
-
-	go t.loop(false)
 }
 
 func (t *SeattleWaste2Mqtt) onDisconnect(client mqtt.Client, err error) {

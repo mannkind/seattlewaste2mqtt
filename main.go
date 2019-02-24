@@ -8,12 +8,10 @@ import (
 var Version = "X.X.X"
 
 func main() {
-	log.Printf("seattlewaste2mqtt Version: %s", Version)
+	log.Printf("Version: %s", Version)
 
-	cl := Initialize()
-	if err := cl.Run(); err != nil {
-		log.Panicf("Error starting collection lookup process: %s", err)
+	x := Initialize()
+	if err := x.Run(); err != nil {
+		log.Panicf("Run Error: %s", err)
 	}
-
-	select {}
 }

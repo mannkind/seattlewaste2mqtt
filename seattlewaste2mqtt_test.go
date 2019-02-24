@@ -67,15 +67,6 @@ func TestSeattleWaste2MqttLoop(t *testing.T) {
 	c.loop(true)
 }
 
-func TestMqttRun(t *testing.T) {
-	c := defaultSeattleWaste2Mqtt()
-	if err := c.Run(); err != nil {
-		t.Error("Something went wrong; expected to connect!")
-	}
-
-	c.client.Disconnect(0)
-}
-
 func TestMqttConnect(t *testing.T) {
 	c := defaultSeattleWaste2Mqtt()
 	c.onConnect(c.client)
