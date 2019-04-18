@@ -10,19 +10,14 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	mqttExtDI "github.com/mannkind/paho.mqtt.golang.ext/di"
 	mqttExtHA "github.com/mannkind/paho.mqtt.golang.ext/ha"
-	resty "gopkg.in/resty.v1"
+	"github.com/mannkind/seattlewaste"
 )
 
 const (
-	apiDateFormat        = "Mon, 2 Jan 2006"
-	apiAddressURL        = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCCAddress"
-	apiCollectionDaysURL = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCollectionDays"
-	sensorTopicTemplate  = "%s/%s/state"
-	maxAPIAttempts       = 5
+	apiDateFormat       = "Mon, 2 Jan 2006"
+	sensorTopicTemplate = "%s/%s/state"
+	maxAPIAttempts      = 5
 )
-
-var binarySensors = []string{"Garbage", "Recycling", "FoodAndYardWaste", "Status"}
-var stringSensors = []string{"Start"}
 
 // SeattleWaste2Mqtt - Lookup collection information on seattle.gov.
 type SeattleWaste2Mqtt struct {
@@ -34,8 +29,7 @@ type SeattleWaste2Mqtt struct {
 	alertWithin     time.Duration
 	lookupInterval  time.Duration
 
-	client         mqtt.Client
-	encodedAddress string
+	client mqtt.Client
 }
 
 // NewSeattleWaste2Mqtt - Returns a new reference to a fully configured object.
@@ -96,7 +90,7 @@ func (t *SeattleWaste2Mqtt) publishDiscovery() {
 		return
 	}
 
-	obj := reflect.ValueOf(apiResponse{})
+	obj := reflect.ValueOf(seattlewaste.Collection{})
 	for i := 0; i < obj.NumField(); i++ {
 		sensor := strings.ToLower(obj.Type().Field(i).Name)
 		val := obj.Field(i)
@@ -131,18 +125,14 @@ func (t *SeattleWaste2Mqtt) publishDiscovery() {
 
 func (t *SeattleWaste2Mqtt) loop(once bool) {
 	for {
-		log.Print("Beginning address encoding")
-		t.encodeAddress()
-		log.Print("Ending address encoding")
-
-		log.Print("Beginning collection lookup")
+		log.Print("Beginning lookup")
 		now := time.Now()
-		if collectionInfo, err := t.collectionLookup(now); collectionInfo.Start != "" && err == nil {
-			t.publishCollectionInfo(collectionInfo)
+		if collectionInfo, date, err := t.collectionLookup(now); collectionInfo.Start != "" && err == nil {
+			t.publishCollectionInfo(collectionInfo, date)
 		} else {
 			log.Print(err)
 		}
-		log.Print("Ending collection lookup")
+		log.Print("Ending lookup")
 
 		if once {
 			break
@@ -152,41 +142,9 @@ func (t *SeattleWaste2Mqtt) loop(once bool) {
 	}
 }
 
-func (t *SeattleWaste2Mqtt) encodeAddress() error {
-	// Only encode the address once
-	if t.encodedAddress != "" {
-		return nil
-	}
-
-	resp, err := resty.R().
-		SetHeader("Content-Type", "application/json").
-		SetResult([]string{}).
-		SetQueryParams(map[string]string{
-			"pAddress": t.address,
-		}).
-		Get(apiAddressURL)
-
-	if err != nil {
-		log.Print(err)
-		return fmt.Errorf("Unable to encode the address %s", t.address)
-	}
-
-	result := (*resp.Result().(*[]string))
-	// Store the result
-	if len(result) > 0 {
-		t.encodedAddress = result[0]
-	}
-
-	return nil
-}
-
-func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (apiResponse, error) {
-	noResult := apiResponse{}
-
-	// Guard-clause for a blank encoded address
-	if t.encodedAddress == "" {
-		return noResult, fmt.Errorf("No encoded address found for collection lookup")
-	}
+func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (seattlewaste.Collection, time.Time, error) {
+	none := seattlewaste.Collection{}
+	swClient := seattlewaste.NewClient(t.address)
 
 	localLoc, _ := time.LoadLocation("Local")
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, localLoc)
@@ -196,26 +154,16 @@ func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (apiResponse, error)
 	apiCallCount := 0
 
 	for lastTimestamp < todayTimestamp && apiCallCount <= maxAPIAttempts {
-		resp, err := resty.R().
-			SetHeader("Content-Type", "application/json").
-			SetResult([]apiResponse{}).
-			SetQueryParams(map[string]string{
-				"pAddress": t.encodedAddress,
-				"pApp":     "CC",
-				"Start":    fmt.Sprintf("%d", lastTimestamp),
-			}).
-			Get(apiCollectionDaysURL)
-
+		results, err := swClient.GetCollections(lastTimestamp)
 		if err != nil {
 			log.Print(err)
-			return noResult, fmt.Errorf("Unable to fetch collection dates")
+			return none, time.Now(), fmt.Errorf("Unable to fetch collection dates")
 		}
 
 		apiCallCount++
 
-		results := (*resp.Result().(*[]apiResponse))
 		if len(results) == 0 {
-			return noResult, fmt.Errorf("No collection dates returned")
+			return none, time.Now(), fmt.Errorf("No collection dates returned")
 		}
 
 		// Results from the 'web-service' do not always return as expected
@@ -228,17 +176,16 @@ func (t *SeattleWaste2Mqtt) collectionLookup(now time.Time) (apiResponse, error)
 
 			lastTimestamp = pTime.Unix()
 			if lastTimestamp >= todayTimestamp {
-				result.Date = pTime
-				return result, nil
+				return result, pTime, nil
 			}
 		}
 	}
 
-	return noResult, nil
+	return none, time.Now(), nil
 }
 
-func (t *SeattleWaste2Mqtt) publishCollectionInfo(info apiResponse) {
-	until := info.Date.Sub(time.Now())
+func (t *SeattleWaste2Mqtt) publishCollectionInfo(info seattlewaste.Collection, date time.Time) {
+	until := date.Sub(time.Now())
 	info.Status = 0 <= until && until <= t.alertWithin
 
 	obj := reflect.ValueOf(info)

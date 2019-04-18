@@ -6,6 +6,5 @@ require (
 	github.com/google/go-cloud v0.5.0
 	github.com/google/wire v0.2.1
 	github.com/mannkind/paho.mqtt.golang.ext v0.2.0
-	github.com/saibing/bingo v1.1.0 // indirect
-	gopkg.in/resty.v1 v1.10.3
+	github.com/mannkind/seattlewaste v0.1.0
 )
