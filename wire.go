@@ -9,8 +9,8 @@ import (
 )
 
 // Initialize - Compile-time DI
-func Initialize() *SeattleWaste2Mqtt {
-	wire.Build(mqttExtCfg.NewMQTTConfig, NewConfig, mqttExtDI.NewMQTTFuncWrapper, NewSeattleWaste2Mqtt)
+func Initialize() *bridge {
+	wire.Build(mqttExtCfg.NewMQTTConfig, mqttExtDI.NewMQTTFuncWrapper, newConfig, newBridge, newMQTTClient, newClient)
 
-	return &SeattleWaste2Mqtt{}
+	return &bridge{}
 }

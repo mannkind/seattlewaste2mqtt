@@ -8,17 +8,15 @@ import (
 	mqttExtCfg "github.com/mannkind/paho.mqtt.golang.ext/cfg"
 )
 
-// Config - Structured configuration for the application.
-type Config struct {
+type config struct {
 	MQTT           *mqttExtCfg.MQTTConfig
 	Address        string        `env:"SEATTLEWASTE_ADDRESS,required"`
 	AlertWithin    time.Duration `env:"SEATTLEWASTE_ALERTWITHIN"      envDefault:"24h"`
 	LookupInterval time.Duration `env:"SEATTLEWASTE_LOOKUPINTERVAL"   envDefault:"8h"`
 }
 
-// NewConfig - Returns a new reference to a fully configured object.
-func NewConfig(mqttCfg *mqttExtCfg.MQTTConfig) *Config {
-	c := Config{}
+func newConfig(mqttCfg *mqttExtCfg.MQTTConfig) *config {
+	c := config{}
 	c.MQTT = mqttCfg
 
 	if c.MQTT.ClientID == "" {
