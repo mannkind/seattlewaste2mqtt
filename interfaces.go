@@ -1,10 +1,16 @@
 package main
 
-import "github.com/mannkind/seattlewaste"
+type eventData struct {
+	Start            string
+	Garbage          bool
+	Recycling        bool
+	FoodAndYardWaste bool
+	Status           bool
+}
 
 type event struct {
 	version int64
-	data    seattlewaste.Collection
+	data    eventData
 }
 
 type observer interface {

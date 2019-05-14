@@ -55,7 +55,7 @@ func (c *client) loop(once bool) {
 		if info, err := c.lookup(now); err == nil {
 			c.publish(event{
 				version: 1,
-				data:    info,
+				data:    c.adapt(info),
 			})
 		} else {
 			log.Print(err)
@@ -112,4 +112,14 @@ func (c *client) lookup(now time.Time) (seattlewaste.Collection, error) {
 	}
 
 	return none, nil
+}
+
+func (c *client) adapt(info seattlewaste.Collection) eventData {
+	return eventData{
+		Start:            info.Start,
+		Garbage:          info.Garbage,
+		Recycling:        info.Recycling,
+		FoodAndYardWaste: info.FoodAndYardWaste,
+		Status:           info.Status,
+	}
 }
