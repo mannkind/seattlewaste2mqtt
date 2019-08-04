@@ -1,11 +1,11 @@
 package main
 
 type eventData struct {
-	Start            string
-	Garbage          bool
-	Recycling        bool
-	FoodAndYardWaste bool
-	Status           bool
+	Start            string `mqttDiscoveryType:"sensor"`
+	Garbage          bool   `mqttDiscoveryType:"binary_sensor"`
+	Recycling        bool   `mqttDiscoveryType:"binary_sensor"`
+	FoodAndYardWaste bool   `mqttDiscoveryType:"binary_sensor"`
+	Status           bool   `mqttDiscoveryType:"binary_sensor"`
 }
 
 type event struct {
@@ -14,10 +14,10 @@ type event struct {
 }
 
 type observer interface {
-	receive(event)
+	receiveState(event)
+	receiveCommand(int64, event)
 }
 
 type publisher interface {
 	register(observer)
-	publish(event)
 }

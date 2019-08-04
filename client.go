@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/mannkind/seattlewaste"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -44,23 +44,21 @@ func (c *client) register(l observer) {
 
 func (c *client) publish(e event) {
 	for o := range c.observers {
-		o.receive(e)
+		o.receiveState(e)
 	}
 }
 
 func (c *client) loop(once bool) {
 	for {
-		log.Print("Beginning lookup")
+		log.Info("Beginning lookup")
 		now := time.Now()
 		if info, err := c.lookup(now); err == nil {
 			c.publish(event{
 				version: 1,
 				data:    c.adapt(info),
 			})
-		} else {
-			log.Print(err)
 		}
-		log.Print("Ending lookup")
+		log.Info("Ending lookup")
 
 		if once {
 			break
@@ -84,8 +82,10 @@ func (c *client) lookup(now time.Time) (seattlewaste.Collection, error) {
 	for lastTimestamp < todayTimestamp && apiCallCount <= maxAPIAttempts {
 		results, err := swclient.GetCollections(lastTimestamp)
 		if err != nil {
-			log.Print(err)
-			return none, fmt.Errorf("Unable to fetch collection dates")
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Unable to fetch collection dates")
+			return none, err
 		}
 
 		apiCallCount++
@@ -98,7 +98,9 @@ func (c *client) lookup(now time.Time) (seattlewaste.Collection, error) {
 		for _, result := range results {
 			pTime, err := time.ParseInLocation(apiDateFormat, result.Start, localLoc)
 			if err != nil {
-				log.Print(err)
+				log.WithFields(log.Fields{
+					"error": err,
+				}).Error("Error parsing the datetime from the 'API'")
 				continue
 			}
 

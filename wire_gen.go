@@ -12,7 +12,7 @@ import (
 
 // Injectors from wire.go:
 
-func Initialize() *bridge {
+func initialize() *bridge {
 	mqttConfig := cfg.NewMQTTConfig()
 	mainConfig := newConfig(mqttConfig)
 	mqttFuncWrapper := di.NewMQTTFuncWrapper()

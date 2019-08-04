@@ -40,3 +40,4 @@ MQTT_BROKER                 - [OPTIONAL] The MQTT broker, defaults to "tcp://mos
 MQTT_USERNAME               - [OPTIONAL] The MQTT username, default to ""
 MQTT_PASSWORD               - [OPTIONAL] The MQTT password, default to ""
 ```
+

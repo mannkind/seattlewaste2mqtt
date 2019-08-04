@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
 	"time"
 
 	"github.com/caarlos0/env"
 	mqttExtCfg "github.com/mannkind/paho.mqtt.golang.ext/cfg"
+	log "github.com/sirupsen/logrus"
 )
 
 type config struct {
@@ -13,6 +13,7 @@ type config struct {
 	Address        string        `env:"SEATTLEWASTE_ADDRESS,required"`
 	AlertWithin    time.Duration `env:"SEATTLEWASTE_ALERTWITHIN"      envDefault:"24h"`
 	LookupInterval time.Duration `env:"SEATTLEWASTE_LOOKUPINTERVAL"   envDefault:"8h"`
+	DebugLogLevel  bool          `env:"SEATTLEWASTE_DEBUG" envDefault:"false"`
 }
 
 func newConfig(mqttCfg *mqttExtCfg.MQTTConfig) *config {
@@ -32,7 +33,9 @@ func newConfig(mqttCfg *mqttExtCfg.MQTTConfig) *config {
 	}
 
 	if err := env.Parse(&c); err != nil {
-		log.Printf("Error unmarshaling configuration: %s", err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to unmarshal configuration")
 	}
 
 	redactedPassword := ""
@@ -40,18 +43,25 @@ func newConfig(mqttCfg *mqttExtCfg.MQTTConfig) *config {
 		redactedPassword = "<REDACTED>"
 	}
 
-	log.Printf("Environmental Settings:")
-	log.Printf("  * ClientID        : %s", c.MQTT.ClientID)
-	log.Printf("  * Broker          : %s", c.MQTT.Broker)
-	log.Printf("  * Username        : %s", c.MQTT.Username)
-	log.Printf("  * Password        : %s", redactedPassword)
-	log.Printf("  * Discovery       : %t", c.MQTT.Discovery)
-	log.Printf("  * DiscoveryPrefix : %s", c.MQTT.DiscoveryPrefix)
-	log.Printf("  * DiscoveryName   : %s", c.MQTT.DiscoveryName)
-	log.Printf("  * TopicPrefix     : %s", c.MQTT.TopicPrefix)
-	log.Printf("  * Address         : %s", c.Address)
-	log.Printf("  * AlertWithin     : %s", c.AlertWithin)
-	log.Printf("  * LookupInterval  : %s", c.LookupInterval)
+	log.WithFields(log.Fields{
+		"MQTT.ClientID":               c.MQTT.ClientID,
+		"MQTT.Broker":                 c.MQTT.Broker,
+		"MQTT.Username":               c.MQTT.Username,
+		"MQTT.Password":               redactedPassword,
+		"MQTT.Discovery":              c.MQTT.Discovery,
+		"MQTT.DiscoveryPrefix":        c.MQTT.DiscoveryPrefix,
+		"MQTT.DiscoveryName":          c.MQTT.DiscoveryName,
+		"MQTT.TopicPrefix":            c.MQTT.TopicPrefix,
+		"SeattleWaste.Address":        c.Address,
+		"SeattleWaste.AlertWithin":    c.AlertWithin,
+		"SeattleWaste.LookupInterval": c.LookupInterval,
+		"SeattleWaste.DebugLogLevel":  c.DebugLogLevel,
+	}).Info("Environmental Settings")
+
+	if c.DebugLogLevel {
+		log.SetLevel(log.DebugLevel)
+		log.Debug("Enabling the debug log level")
+	}
 
 	return &c
 }
