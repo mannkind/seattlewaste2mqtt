@@ -19,18 +19,7 @@ type config struct {
 func newConfig(mqttCfg *mqttExtCfg.MQTTConfig) *config {
 	c := config{}
 	c.MQTT = mqttCfg
-
-	if c.MQTT.ClientID == "" {
-		c.MQTT.ClientID = "DefaultSeattleWaste2MQTTClientID"
-	}
-
-	if c.MQTT.DiscoveryName == "" {
-		c.MQTT.DiscoveryName = "seattle_waste"
-	}
-
-	if c.MQTT.TopicPrefix == "" {
-		c.MQTT.TopicPrefix = "home/seattle_waste"
-	}
+	c.MQTT.Defaults("DefaultSeattleWaste2MQTTClientID", "seattle_waste", "home/seattle_waste")
 
 	if err := env.Parse(&c); err != nil {
 		log.WithFields(log.Fields{
@@ -38,20 +27,7 @@ func newConfig(mqttCfg *mqttExtCfg.MQTTConfig) *config {
 		}).Error("Unable to unmarshal configuration")
 	}
 
-	redactedPassword := ""
-	if len(c.MQTT.Password) > 0 {
-		redactedPassword = "<REDACTED>"
-	}
-
 	log.WithFields(log.Fields{
-		"MQTT.ClientID":               c.MQTT.ClientID,
-		"MQTT.Broker":                 c.MQTT.Broker,
-		"MQTT.Username":               c.MQTT.Username,
-		"MQTT.Password":               redactedPassword,
-		"MQTT.Discovery":              c.MQTT.Discovery,
-		"MQTT.DiscoveryPrefix":        c.MQTT.DiscoveryPrefix,
-		"MQTT.DiscoveryName":          c.MQTT.DiscoveryName,
-		"MQTT.TopicPrefix":            c.MQTT.TopicPrefix,
 		"SeattleWaste.Address":        c.Address,
 		"SeattleWaste.AlertWithin":    c.AlertWithin,
 		"SeattleWaste.LookupInterval": c.LookupInterval,
