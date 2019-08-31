@@ -27,6 +27,7 @@ format:
 clean: 
 		$(GOCLEAN)
 		rm -f $(BINARY_NAME)
+		rm -f Dockerfile.a*
 vet:
 	    $(GOVET) .
 get_wire:
