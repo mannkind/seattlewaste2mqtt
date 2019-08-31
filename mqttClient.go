@@ -1,94 +1,43 @@
 package main
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	mqttExtDI "github.com/mannkind/paho.mqtt.golang.ext/di"
-	mqttExtHA "github.com/mannkind/paho.mqtt.golang.ext/ha"
+	"github.com/mannkind/twomqtt"
 	log "github.com/sirupsen/logrus"
 )
 
 type mqttClient struct {
-	discovery       bool
-	discoveryPrefix string
-	discoveryName   string
-	topicPrefix     string
-
-	client mqtt.Client
-
-	lastPublished map[string]string
+	twomqtt.Observer
+	*twomqtt.MQTTProxy
+	mqttClientConfig
 }
 
-func newMQTTClient(config *config, mqttFuncWrapper mqttExtDI.MQTTFuncWrapper) *mqttClient {
+func newMQTTClient(mqttClientCfg mqttClientConfig, client *twomqtt.MQTTProxy) *mqttClient {
 	c := mqttClient{
-		discovery:       config.MQTT.Discovery,
-		discoveryPrefix: config.MQTT.DiscoveryPrefix,
-		discoveryName:   config.MQTT.DiscoveryName,
-		topicPrefix:     config.MQTT.TopicPrefix,
-
-		lastPublished: map[string]string{},
+		MQTTProxy:        client,
+		mqttClientConfig: mqttClientCfg,
 	}
 
-	c.client = mqttFuncWrapper(
-		config.MQTT,
+	c.Initialize(
 		c.onConnect,
 		c.onDisconnect,
-		c.availabilityTopic(),
 	)
+
+	c.LogSettings()
 
 	return &c
 }
 
 func (c *mqttClient) run() {
-	c.runAfter(0 * time.Second)
-}
-
-func (c *mqttClient) runAfter(delay time.Duration) {
-	time.Sleep(delay)
-
-	log.Info("Connecting to MQTT")
-	if token := c.client.Connect(); !token.Wait() || token.Error() != nil {
-		log.WithFields(log.Fields{
-			"error": token.Error(),
-		}).Error("Error connecting to MQTT")
-
-		delay = c.adjustReconnectDelay(delay)
-
-		log.WithFields(log.Fields{
-			"delay": delay,
-		}).Info("Sleeping before attempting to reconnect to MQTT")
-
-		c.runAfter(delay)
-	}
-}
-
-func (c *mqttClient) adjustReconnectDelay(delay time.Duration) time.Duration {
-	var maxDelay float64 = 120
-	defaultDelay := 2 * time.Second
-
-	// No delay, set to default delay
-	if delay.Seconds() == 0 {
-		delay = defaultDelay
-	} else {
-		// Increment the delay
-		delay = delay * 2
-
-		// If the delay is above two minutes, reset to default
-		if delay.Seconds() > maxDelay {
-			delay = defaultDelay
-		}
-	}
-
-	return delay
+	c.Run()
 }
 
 func (c *mqttClient) onConnect(client mqtt.Client) {
-	log.Info("Connected to MQTT")
-	c.publish(c.availabilityTopic(), "online")
+	log.Info("Finished connecting to MQTT")
+	c.Publish(c.AvailabilityTopic(), "online")
 	c.publishDiscovery()
 }
 
@@ -98,66 +47,73 @@ func (c *mqttClient) onDisconnect(client mqtt.Client, err error) {
 	}).Error("Disconnected from MQTT")
 }
 
-func (c *mqttClient) availabilityTopic() string {
-	return fmt.Sprintf("%s/status", c.topicPrefix)
-}
-
 func (c *mqttClient) publishDiscovery() {
-	if !c.discovery {
+	if !c.Discovery {
 		return
 	}
 
-	obj := reflect.ValueOf(event{}.data)
-	for i := 0; i < obj.NumField(); i++ {
-		field := obj.Type().Field(i)
-		sensor := strings.ToLower(field.Name)
-		sensorOverride := field.Tag.Get("mqtt")
-		sensorType := field.Tag.Get("mqttDiscoveryType")
+	log.Info("MQTT discovery publishing")
 
-		// Skip any fields tagged as ignored for mqtt
-		if strings.Contains(sensorOverride, ",ignore") {
-			continue
+	for address, name := range c.Addresses {
+		log.WithFields(log.Fields{
+			"address": address,
+		}).Debug("Iterating through addresses")
+
+		obj := reflect.ValueOf(collection{})
+		for i := 0; i < obj.NumField(); i++ {
+			field := obj.Type().Field(i)
+			sensor := strings.ToLower(field.Name)
+			sensorOverride, sensorIgnored := twomqtt.MQTTOverride(field)
+			sensorType, sensorTypeIgnored := twomqtt.MQTTDiscoveryOverride(field)
+
+			// Skip any fields tagged as ignored
+			if sensorIgnored || sensorTypeIgnored {
+				continue
+			}
+
+			// Override sensor name
+			if sensorOverride != "" {
+				sensor = sensorOverride
+			}
+
+			mqd := c.NewMQTTDiscovery(name, sensor, sensorType)
+
+			c.PublishDiscovery(mqd)
 		}
 
-		// Override sensor name
-		if sensorOverride != "" {
-			sensor = sensorOverride
-		}
-
-		// Skip any fields tagged as ignores for discovery
-		if strings.Contains(sensorType, ",ignore") {
-			continue
-		}
-
-		mqd := mqttExtHA.MQTTDiscovery{
-			DiscoveryPrefix: c.discoveryPrefix,
-			Component:       sensorType,
-			NodeID:          c.discoveryName,
-			ObjectID:        sensor,
-
-			AvailabilityTopic: c.availabilityTopic(),
-			Name:              fmt.Sprintf("%s %s", c.discoveryName, sensor),
-			StateTopic:        fmt.Sprintf(sensorTopicTemplate, c.topicPrefix, sensor),
-			UniqueID:          fmt.Sprintf("%s.%s", c.discoveryName, sensor),
-		}
-
-		mqd.PublishDiscovery(c.client)
+		log.Debug("Finished iterating through addresses")
 	}
+
+	log.Info("Finished MQTT discovery publishing")
 }
 
-func (c *mqttClient) receiveCommand(cmd int64, e event) {}
-func (c *mqttClient) receiveState(e event) {
-	info := e.data
+func (c *mqttClient) ReceiveCommand(cmd twomqtt.Command, e twomqtt.Event) {}
+func (c *mqttClient) ReceiveState(e twomqtt.Event) {
+	if e.Type != reflect.TypeOf(collection{}) {
+		msg := "Unexpected event type; skipping"
+		log.WithFields(log.Fields{
+			"type": e.Type,
+		}).Error(msg)
+		return
+	}
+
+	info := e.Payload.(collection)
+	name := c.Addresses[info.Address]
 	obj := reflect.ValueOf(info)
+
+	log.WithFields(log.Fields{
+		"info": info,
+	}).Debug("Publishing received state")
+
 	for i := 0; i < obj.NumField(); i++ {
 		field := obj.Type().Field(i)
 		val := obj.Field(i)
 		sensor := strings.ToLower(field.Name)
-		sensorOverride := field.Tag.Get("mqtt")
-		sensorType := field.Tag.Get("mqttDiscoveryType")
+		sensorOverride, sensorIgnored := twomqtt.MQTTOverride(field)
+		_, sensorTypeIgnored := twomqtt.MQTTDiscoveryOverride(field)
 
-		// Skip any fields tagged as ignored for mqtt
-		if strings.Contains(sensorOverride, ",ignore") {
+		// Skip any fields tagged as ignored
+		if sensorIgnored || sensorTypeIgnored {
 			continue
 		}
 
@@ -166,12 +122,7 @@ func (c *mqttClient) receiveState(e event) {
 			sensor = sensorOverride
 		}
 
-		// Skip any fields tagged as ignores for discovery
-		if strings.Contains(sensorType, ",ignore") {
-			continue
-		}
-
-		topic := fmt.Sprintf(sensorTopicTemplate, c.topicPrefix, sensor)
+		topic := c.StateTopic(name, sensor)
 		payload := ""
 
 		switch val.Kind() {
@@ -188,29 +139,8 @@ func (c *mqttClient) receiveState(e event) {
 			continue
 		}
 
-		c.publish(topic, payload)
-	}
-}
-
-func (c *mqttClient) publish(topic string, payload string) {
-	llog := log.WithFields(log.Fields{
-		"topic":   topic,
-		"payload": payload,
-	})
-	// Should we publish this again?
-	// NOTE: We must allow the availability topic to publish duplicates
-	if lastPayload, ok := c.lastPublished[topic]; topic != c.availabilityTopic() && ok && lastPayload == payload {
-		llog.Debug("Duplicate payload")
-		return
+		c.Publish(topic, payload)
 	}
 
-	llog.Info("Publishing to MQTT")
-
-	retain := true
-	if token := c.client.Publish(topic, 0, retain, payload); token.Wait() && token.Error() != nil {
-		log.Error("Publishing error")
-	}
-
-	llog.Debug("Published to MQTT")
-	c.lastPublished[topic] = payload
+	log.Debug("Finished publishing received state")
 }
