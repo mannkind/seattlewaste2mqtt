@@ -10,7 +10,7 @@ import (
 )
 
 type mqttClient struct {
-	twomqtt.Observer
+	twomqtt.StateObserver
 	*twomqtt.MQTTProxy
 	mqttClientConfig
 }
@@ -87,7 +87,6 @@ func (c *mqttClient) publishDiscovery() {
 	log.Info("Finished MQTT discovery publishing")
 }
 
-func (c *mqttClient) ReceiveCommand(cmd twomqtt.Command, e twomqtt.Event) {}
 func (c *mqttClient) ReceiveState(e twomqtt.Event) {
 	if e.Type != reflect.TypeOf(collection{}) {
 		msg := "Unexpected event type; skipping"
