@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/mannkind/seattlewaste"
-	"github.com/mannkind/twomqtt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,13 +14,14 @@ const (
 )
 
 type serviceClient struct {
-	twomqtt.StatePublisher
 	serviceClientConfig
+	stateUpdateChan stateChannel
 }
 
-func newServiceClient(serviceClientCfg serviceClientConfig) *serviceClient {
+func newServiceClient(serviceClientCfg serviceClientConfig, stateUpdateChan stateChannel) *serviceClient {
 	c := serviceClient{
 		serviceClientConfig: serviceClientCfg,
+		stateUpdateChan:     stateUpdateChan,
 	}
 
 	log.WithFields(log.Fields{
@@ -48,12 +47,12 @@ func (c *serviceClient) loop() {
 				continue
 			}
 
-			event, err := c.adapt(address, info)
+			obj, err := c.adapt(address, info)
 			if err != nil {
 				continue
 			}
 
-			c.SendState(event)
+			c.stateUpdateChan <- obj
 		}
 
 		log.WithFields(log.Fields{
@@ -129,7 +128,7 @@ func (c *serviceClient) lookup(address string, now time.Time) (seattlewaste.Coll
 	return none, nil
 }
 
-func (c *serviceClient) adapt(address string, info seattlewaste.Collection) (twomqtt.Event, error) {
+func (c *serviceClient) adapt(address string, info seattlewaste.Collection) (collection, error) {
 	log.WithFields(log.Fields{
 		"address":    address,
 		"collection": info,
@@ -143,11 +142,7 @@ func (c *serviceClient) adapt(address string, info seattlewaste.Collection) (two
 		FoodAndYardWaste: info.FoodAndYardWaste,
 		Status:           info.Status,
 	}
-	event := twomqtt.Event{
-		Type:    reflect.TypeOf(obj),
-		Payload: obj,
-	}
 
 	log.Debug("Finished adapting collection information")
-	return event, nil
+	return obj, nil
 }
