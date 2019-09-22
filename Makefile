@@ -11,7 +11,7 @@ ifdef DOCKER_VERSION_ADDTL
 	DOCKER_LATEST=
 endif
 
-all: build
+all: wire format vet build test
 clean: 
 	go clean
 	rm -f $(BINARY_NAME)
@@ -24,7 +24,7 @@ get_wire:
 	go get github.com/google/wire/cmd/wire
 wire: get_wire
 	wire gen
-build: wire format vet
+build: 
 	go build $(BINARY_VERSION_FLAGS) -o $(BINARY_NAME) -v
 test: build
 	go test --coverprofile=/tmp/app.cover -v ./...
