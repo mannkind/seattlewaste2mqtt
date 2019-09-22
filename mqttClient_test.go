@@ -50,14 +50,14 @@ func TestDiscovery(t *testing.T) {
 				defaultDiscoveryName,
 				defaultTopicPrefix,
 				"homeassistant/binary_sensor/" + defaultDiscoveryName + "/" + knownType + "/config",
-				"{\"availability_topic\":\"" + defaultTopicPrefix + "/status\",\"name\":\"" + defaultDiscoveryName + " " + knownType + "\",\"state_topic\":\"" + defaultTopicPrefix + "/" + knownType + "/state\",\"unique_id\":\"" + defaultDiscoveryName + "." + knownType + "\"}",
+				"{\"availability_topic\":\"" + defaultTopicPrefix + "/status\",\"device\":{\"identifiers\":[\"" + defaultTopicPrefix + "/status\"],\"manufacturer\":\"twomqtt\",\"name\":\"x2mqtt\",\"sw_version\":\"X.X.X\"},\"name\":\"" + defaultDiscoveryName + " " + knownType + "\",\"state_topic\":\"" + defaultTopicPrefix + "/" + knownType + "/state\",\"unique_id\":\"" + defaultDiscoveryName + "." + knownType + "\"}",
 			},
 			{
 				knownAddress + ":" + knownAddressName,
 				knownDiscoveryName,
 				knownTopicPrefix,
 				"homeassistant/binary_sensor/" + knownDiscoveryName + "/" + knownAddressName + "_" + knownType + "/config",
-				"{\"availability_topic\":\"" + knownTopicPrefix + "/status\",\"name\":\"" + knownDiscoveryName + " " + knownAddressName + " " + knownType + "\",\"state_topic\":\"" + knownTopicPrefix + "/" + knownAddressName + "/" + knownType + "/state\",\"unique_id\":\"" + knownDiscoveryName + "." + knownAddressName + "." + knownType + "\"}",
+				"{\"availability_topic\":\"" + knownTopicPrefix + "/status\",\"device\":{\"identifiers\":[\"" + knownTopicPrefix + "/status\"],\"manufacturer\":\"twomqtt\",\"name\":\"x2mqtt\",\"sw_version\":\"X.X.X\"},\"name\":\"" + knownDiscoveryName + " " + knownAddressName + " " + knownType + "\",\"state_topic\":\"" + knownTopicPrefix + "/" + knownAddressName + "/" + knownType + "/state\",\"unique_id\":\"" + knownDiscoveryName + "." + knownAddressName + "." + knownType + "\"}",
 			},
 		}
 
