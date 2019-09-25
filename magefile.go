@@ -109,7 +109,7 @@ func (Git) Push() error {
 	mg.SerialDeps(Git.Tag)
 
 	fmt.Println("Pushing Git Repo Tags")
-	if err := sh.Run("sed", "-i", "", "-e", "s/github.com/mannkind:$GITHUB_TOKEN@github.com/g", ".git/config"); err != nil {
+	if err := sh.Run("sed", "-i", "-e", "s/github.com/mannkind:$GITHUB_TOKEN@github.com/g", ".git/config"); err != nil {
 		return err
 	}
 
@@ -144,15 +144,15 @@ func (Docker) Build() error {
 			return err
 		}
 
-		if err := sh.Run("sed", "-i", "", "-e", "s|__BASEIMAGE_ARCH__|"+arch+"|g", dockerfileWithArch); err != nil {
+		if err := sh.Run("sed", "-i", "-e", "s|__BASEIMAGE_ARCH__|"+arch+"|g", dockerfileWithArch); err != nil {
 			return err
 		}
 
-		if err := sh.Run("sed", "-i", "", "-e", "s|__GOLANG_ARCH__|"+golangArch+"|g", dockerfileWithArch); err != nil {
+		if err := sh.Run("sed", "-i", "-e", "s|__GOLANG_ARCH__|"+golangArch+"|g", dockerfileWithArch); err != nil {
 			return err
 		}
 
-		if err := sh.Run("sed", "-i", "", "-e", "s|__BINARY_NAME__|"+BinaryName+"|g", dockerfileWithArch); err != nil {
+		if err := sh.Run("sed", "-i", "-e", "s|__BINARY_NAME__|"+BinaryName+"|g", dockerfileWithArch); err != nil {
 			return err
 		}
 

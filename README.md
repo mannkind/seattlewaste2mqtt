@@ -14,12 +14,12 @@ License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)]
 docker run -d --name="seattlewaste2mqtt" -e "SEATTLEWASTE_ADDRESS=2133 N 61ST ST" -v /etc/localtime:/etc/localtime:ro mannkind/seattlewaste2mqtt
 ```
 
-### Via Make
+### Via Mage
 
 ```bash
 git clone https://github.com/mannkind/seattlewaste2mqtt
 cd seattlewaste2mqtt
-make
+mage
 SEATTLEWASTE_ADDRESS="2133 N 61ST ST" ./seattlewaste2mqtt
 ```
 
