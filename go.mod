@@ -6,7 +6,8 @@ require (
 	github.com/google/wire v0.3.0
 	github.com/magefile/mage v1.9.0
 	github.com/mannkind/seattlewaste v0.1.0
-	github.com/mannkind/twomqtt v0.3.1
+	github.com/mannkind/twomqtt v0.3.2
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.4.2
 )
 

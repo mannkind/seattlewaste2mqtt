@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mannkind/seattlewaste"
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -34,32 +35,35 @@ func newServiceClient(serviceClientCfg serviceClientConfig, stateUpdateChan stat
 }
 
 func (c *serviceClient) run() {
+	// Run immediately
 	go c.loop()
+
+	// Schedule additional runs
+	sched := cron.New()
+	sched.AddFunc(fmt.Sprintf("@every %s", c.LookupInterval), c.loop)
+	sched.Start()
 }
 
 func (c *serviceClient) loop() {
-	for {
-		log.Info("Looping")
-		now := time.Now()
-		for address := range c.Addresses {
-			info, err := c.lookup(address, now)
-			if err != nil {
-				continue
-			}
-
-			obj, err := c.adapt(address, info)
-			if err != nil {
-				continue
-			}
-
-			c.stateUpdateChan <- obj
+	log.Info("Looping")
+	now := time.Now()
+	for address := range c.Addresses {
+		info, err := c.lookup(address, now)
+		if err != nil {
+			continue
 		}
 
-		log.WithFields(log.Fields{
-			"sleep": c.LookupInterval,
-		}).Info("Finished looping; sleeping")
-		time.Sleep(c.LookupInterval)
+		obj, err := c.adapt(address, info)
+		if err != nil {
+			continue
+		}
+
+		c.stateUpdateChan <- obj
 	}
+
+	log.WithFields(log.Fields{
+		"sleep": c.LookupInterval,
+	}).Info("Finished looping; sleeping")
 }
 
 func (c *serviceClient) lookup(address string, now time.Time) (seattlewaste.Collection, error) {
