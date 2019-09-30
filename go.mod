@@ -1,5 +1,7 @@
 module github.com/mannkind/seattlewaste2mqtt
 
+go 1.13
+
 require (
 	github.com/caarlos0/env/v6 v6.0.0
 	github.com/eclipse/paho.mqtt.golang v1.2.0
