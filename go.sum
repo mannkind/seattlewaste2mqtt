@@ -23,6 +23,8 @@ github.com/mannkind/twomqtt v0.3.1 h1:+HjaILCw93YiWCEWuXdk/z9c4dT2qHT4uQZD5kMImy
 github.com/mannkind/twomqtt v0.3.1/go.mod h1:Dj5c1nQlMU2a0L63jg6Uoj/LpUYnfKNKplaCBzDyQQM=
 github.com/mannkind/twomqtt v0.3.2 h1:nWYjIoV0tmMGxzhak7f5UAGw6gOpbHk+Ap9wQlzJQjA=
 github.com/mannkind/twomqtt v0.3.2/go.mod h1:XdfxtckbeXej4mEMSgLbMfmZ5QHwlW88S4QVUgC2thI=
+github.com/mannkind/twomqtt v0.3.3 h1:8uW7y5ZhfyFUbLpK3aV/qdkD3aoYipU4zwMC+a9PV2c=
+github.com/mannkind/twomqtt v0.3.3/go.mod h1:iUkrXg+v3gKVlpQk67x2jIRO6kJdZFVfw7dT5EdFggU=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-isatty v0.0.8/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
