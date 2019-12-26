@@ -1,7 +1,6 @@
 package main
 
-type addressMapping = map[string]string
-type collection struct {
+type sourceRep struct {
 	Address          string `mqttDiscoveryType:",ignore"`
 	Start            string `mqttDiscoveryType:"sensor"`
 	Garbage          bool   `mqttDiscoveryType:"binary_sensor"`

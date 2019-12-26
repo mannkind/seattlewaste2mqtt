@@ -14,59 +14,59 @@ const (
 	maxAPIAttempts = 5
 )
 
-type serviceClient struct {
-	serviceClientConfig
-	stateUpdateChan stateChannel
+type source struct {
+	config   sourceOpts
+	outgoing chan<- sourceRep
 }
 
-func newServiceClient(serviceClientCfg serviceClientConfig, stateUpdateChan stateChannel) *serviceClient {
-	c := serviceClient{
-		serviceClientConfig: serviceClientCfg,
-		stateUpdateChan:     stateUpdateChan,
+func newSource(config sourceOpts, outgoing chan<- sourceRep) *source {
+	c := source{
+		config:   config,
+		outgoing: outgoing,
 	}
-
-	log.WithFields(log.Fields{
-		"SeattleWaste.Addresses":      c.Addresses,
-		"SeattleWaste.AlertWithin":    c.AlertWithin,
-		"SeattleWaste.LookupInterval": c.LookupInterval,
-	}).Info("Service Client Environmental Settings")
 
 	return &c
 }
 
-func (c *serviceClient) run() {
+func (c *source) run() {
+	// Log service settings
+	c.logSettings()
+
 	// Run immediately
-	go c.loop()
+	c.poll()
 
 	// Schedule additional runs
 	sched := cron.New()
-	sched.AddFunc(fmt.Sprintf("@every %s", c.LookupInterval), c.loop)
+	sched.AddFunc(fmt.Sprintf("@every %s", c.config.LookupInterval), c.poll)
 	sched.Start()
 }
 
-func (c *serviceClient) loop() {
-	log.Info("Looping")
+func (c *source) logSettings() {
+	log.WithFields(log.Fields{
+		"SeattleWaste.Addresses":      c.config.Addresses,
+		"SeattleWaste.AlertWithin":    c.config.AlertWithin,
+		"SeattleWaste.LookupInterval": c.config.LookupInterval,
+	}).Info("Service Client Environmental Settings")
+}
+
+func (c *source) poll() {
+	log.Info("Polling")
 	now := time.Now()
-	for address := range c.Addresses {
+	for address := range c.config.Addresses {
 		info, err := c.lookup(address, now)
 		if err != nil {
 			continue
 		}
 
-		obj, err := c.adapt(address, info)
-		if err != nil {
-			continue
-		}
-
-		c.stateUpdateChan <- obj
+		c.outgoing <- c.adapt(address, info)
 	}
 
 	log.WithFields(log.Fields{
-		"sleep": c.LookupInterval,
-	}).Info("Finished looping; sleeping")
+		"sleep": c.config.LookupInterval,
+	}).Info("Finished polling; sleeping")
 }
 
-func (c *serviceClient) lookup(address string, now time.Time) (seattlewaste.Collection, error) {
+func (c *source) lookup(address string, now time.Time) (seattlewaste.Collection, error) {
 	log.WithFields(log.Fields{
 		"address": address,
 	}).Info("Looking up collection information for address")
@@ -119,7 +119,7 @@ func (c *serviceClient) lookup(address string, now time.Time) (seattlewaste.Coll
 			lastTimestamp = pTime.Unix()
 			if lastTimestamp >= todayTimestamp {
 				until := pTime.Sub(time.Now())
-				result.Status = 0 <= until && until <= c.AlertWithin
+				result.Status = 0 <= until && until <= c.config.AlertWithin
 
 				log.Debug("Finished API request(s)")
 
@@ -132,13 +132,8 @@ func (c *serviceClient) lookup(address string, now time.Time) (seattlewaste.Coll
 	return none, nil
 }
 
-func (c *serviceClient) adapt(address string, info seattlewaste.Collection) (collection, error) {
-	log.WithFields(log.Fields{
-		"address":    address,
-		"collection": info,
-	}).Debug("Adapting collection information")
-
-	obj := collection{
+func (c *source) adapt(address string, info seattlewaste.Collection) sourceRep {
+	obj := sourceRep{
 		Address:          address,
 		Start:            info.Start,
 		Garbage:          info.Garbage,
@@ -147,6 +142,5 @@ func (c *serviceClient) adapt(address string, info seattlewaste.Collection) (col
 		Status:           info.Status,
 	}
 
-	log.Debug("Finished adapting collection information")
-	return obj, nil
+	return obj
 }
