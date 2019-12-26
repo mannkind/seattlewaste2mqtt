@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mannkind/twomqtt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,25 +40,28 @@ func TestDiscovery(t *testing.T) {
 
 	for _, knownType := range knownTypes {
 		var tests = []struct {
-			Addresses       string
-			DiscoveryName   string
-			TopicPrefix     string
-			ExpectedTopic   string
-			ExpectedPayload string
+			Addresses          string
+			DiscoveryName      string
+			TopicPrefix        string
+			ExpectedName       string
+			ExpectedStateTopic string
+			ExpectedUniqueID   string
 		}{
 			{
 				knownAddress,
 				defaultDiscoveryName,
 				defaultTopicPrefix,
-				"homeassistant/binary_sensor/" + defaultDiscoveryName + "/" + knownType + "/config",
-				"{\"availability_topic\":\"" + defaultTopicPrefix + "/status\",\"device\":{\"identifiers\":[\"" + defaultTopicPrefix + "/status\"],\"manufacturer\":\"twomqtt\",\"name\":\"x2mqtt\",\"sw_version\":\"X.X.X\"},\"name\":\"" + defaultDiscoveryName + " " + knownType + "\",\"state_topic\":\"" + defaultTopicPrefix + "/" + knownType + "/state\",\"unique_id\":\"" + defaultDiscoveryName + "." + knownType + "\"}",
+				defaultDiscoveryName + " " + knownType,
+				defaultTopicPrefix + "/" + knownType + "/state",
+				defaultDiscoveryName + "." + knownType,
 			},
 			{
 				knownAddress + ":" + knownAddressName,
 				knownDiscoveryName,
 				knownTopicPrefix,
-				"homeassistant/binary_sensor/" + knownDiscoveryName + "/" + knownAddressName + "_" + knownType + "/config",
-				"{\"availability_topic\":\"" + knownTopicPrefix + "/status\",\"device\":{\"identifiers\":[\"" + knownTopicPrefix + "/status\"],\"manufacturer\":\"twomqtt\",\"name\":\"x2mqtt\",\"sw_version\":\"X.X.X\"},\"name\":\"" + knownDiscoveryName + " " + knownAddressName + " " + knownType + "\",\"state_topic\":\"" + knownTopicPrefix + "/" + knownAddressName + "/" + knownType + "/state\",\"unique_id\":\"" + knownDiscoveryName + "." + knownAddressName + "." + knownType + "\"}",
+				knownDiscoveryName + " " + knownAddressName + " " + knownType,
+				knownTopicPrefix + "/" + knownAddressName + "/" + knownType + "/state",
+				knownDiscoveryName + "." + knownAddressName + "." + knownType,
 			},
 		}
 
@@ -65,17 +69,30 @@ func TestDiscovery(t *testing.T) {
 			setEnvs("true", v.DiscoveryName, v.TopicPrefix, v.Addresses)
 
 			c := initialize()
-			c.mqttClient.publishDiscovery()
+			mqds := c.sink.discovery()
 
-			actualPayload := c.mqttClient.LastPublishedOnTopic(v.ExpectedTopic)
-			if actualPayload != v.ExpectedPayload {
-				t.Errorf("Actual:%s\nExpected:%s", actualPayload, v.ExpectedPayload)
+			mqd := twomqtt.MQTTDiscovery{}
+			for _, tmqd := range mqds {
+				if tmqd.Name == v.ExpectedName {
+					mqd = tmqd
+					break
+				}
+			}
+
+			if mqd.Name != v.ExpectedName {
+				t.Errorf("discovery Name does not match; %s vs %s", mqd.Name, v.ExpectedName)
+			}
+			if mqd.StateTopic != v.ExpectedStateTopic {
+				t.Errorf("discovery StateTopic does not match; %s vs %s", mqd.StateTopic, v.ExpectedStateTopic)
+			}
+			if mqd.UniqueID != v.ExpectedUniqueID {
+				t.Errorf("discovery UniqueID does not match; %s vs %s", mqd.UniqueID, v.ExpectedUniqueID)
 			}
 		}
 	}
 }
 
-func TestReceieveState(t *testing.T) {
+func TestPublish(t *testing.T) {
 	defer clearEnvs()
 
 	for _, knownType := range knownTypes {
@@ -99,7 +116,7 @@ func TestReceieveState(t *testing.T) {
 			},
 		}
 
-		obj := collection{
+		obj := sourceRep{
 			Address:          knownAddress,
 			Start:            "2019-08-01",
 			Garbage:          true,
@@ -111,11 +128,19 @@ func TestReceieveState(t *testing.T) {
 		for _, v := range tests {
 			setEnvs("false", "", v.TopicPrefix, v.Addresses)
 			c := initialize()
-			c.mqttClient.receiveState(obj)
 
-			actualPayload := c.mqttClient.LastPublishedOnTopic(v.ExpectedTopic)
-			if actualPayload != v.ExpectedPayload {
-				t.Errorf("Actual:%s\nExpected:%s", actualPayload, v.ExpectedPayload)
+			allPublished := c.sink.publish(obj)
+
+			matching := twomqtt.MQTTMessage{}
+			for _, state := range allPublished {
+				if state.Topic == v.ExpectedTopic {
+					matching = state
+					break
+				}
+			}
+
+			if matching.Payload != v.ExpectedPayload {
+				t.Errorf("Actual:%s\nExpected:%s", matching.Payload, v.ExpectedPayload)
 			}
 		}
 	}
