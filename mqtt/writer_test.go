@@ -1,9 +1,10 @@
-package main
+package mqtt
 
 import (
 	"os"
 	"testing"
 
+	"github.com/mannkind/seattlewaste2mqtt/shared"
 	"github.com/mannkind/twomqtt"
 	log "github.com/sirupsen/logrus"
 )
@@ -22,6 +23,17 @@ var knownTypes = []string{
 
 func init() {
 	log.SetLevel(log.PanicLevel)
+}
+
+func initialize() *Writer {
+	opts := shared.NewOpts()
+	v := shared.NewRepresentationChannel()
+	v3 := shared.NewRepresentationChannelIncoming(v)
+	mqttOpts := NewOpts(opts)
+	twomqttMQTTOpts := mqttOpts.MQTTOpts
+	twomqttMQTT := twomqtt.NewMQTT(twomqttMQTTOpts)
+	writer := NewWriter(twomqttMQTT, mqttOpts, v3)
+	return writer
 }
 
 func setEnvs(d, dn, tp, a string) {
@@ -69,7 +81,7 @@ func TestDiscovery(t *testing.T) {
 			setEnvs("true", v.DiscoveryName, v.TopicPrefix, v.Addresses)
 
 			c := initialize()
-			mqds := c.sink.discovery()
+			mqds := c.discovery()
 
 			mqd := twomqtt.MQTTDiscovery{}
 			for _, tmqd := range mqds {
@@ -116,7 +128,7 @@ func TestPublish(t *testing.T) {
 			},
 		}
 
-		obj := sourceRep{
+		obj := shared.Representation{
 			Address:          knownAddress,
 			Start:            "2019-08-01",
 			Garbage:          true,
@@ -129,7 +141,7 @@ func TestPublish(t *testing.T) {
 			setEnvs("false", "", v.TopicPrefix, v.Addresses)
 			c := initialize()
 
-			allPublished := c.sink.publish(obj)
+			allPublished := c.publish(obj)
 
 			matching := twomqtt.MQTTMessage{}
 			for _, state := range allPublished {

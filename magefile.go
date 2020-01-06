@@ -40,6 +40,7 @@ func All() {
 	mg.SerialDeps(Go.Vet)
 	mg.SerialDeps(Go.Build)
 	mg.SerialDeps(Go.Test)
+	mg.SerialDeps(Go.Tidy)
 }
 
 // Remove the binary and architecture specific Dockerfiles
@@ -61,19 +62,19 @@ func Clean() error {
 // Compile the application with the proper ldflags
 func (Go) Build() error {
 	fmt.Println("Building")
-	return g0("build", "-trimpath", "-ldflags", "-X \"main.Version="+BinaryVersion+"\" -X \"main.Name="+BinaryName+"\"", "-o", BinaryName, ".")
+	return g0("build", "-trimpath", "-ldflags", "-X \"github.com/mannkind/"+BinaryName+"/shared.Version="+BinaryVersion+"\" -X \"github.com/mannkind/"+BinaryName+"/shared.Name="+BinaryName+"\"", "-o", BinaryName, ".")
 }
 
 // Ensure the code is formatted properly
 func (Go) Format() error {
 	fmt.Println("Formatting")
-	return g0("fmt", ".")
+	return g0("fmt", "./...")
 }
 
 // Ensure the code passes vetting
 func (Go) Vet() error {
 	fmt.Println("Vetting")
-	return g0("vet", ".")
+	return g0("vet", "./...")
 }
 
 // Get the compile-time DI tool
@@ -95,7 +96,15 @@ func (Go) Test() error {
 	mg.SerialDeps(Go.Build)
 
 	fmt.Println("Testing")
-	return g0("test", "--coverprofile", "/tmp/app.cover", "-v", ".")
+	return g0("test", "--coverprofile", "/tmp/app.cover", "-v", "./...")
+}
+
+// Run the tidy command
+func (Go) Tidy() error {
+	mg.SerialDeps(Go.Build)
+
+	fmt.Println("Tidying")
+	return g0("mod", "tidy")
 }
 
 // Create a new tag for the git repository using the generated binary version

@@ -1,22 +1,25 @@
-package main
+package mqtt
 
 import (
 	"reflect"
 	"strings"
 
+	"github.com/mannkind/seattlewaste2mqtt/shared"
 	"github.com/mannkind/twomqtt"
 )
 
-type sink struct {
+// Writer is for writing a shared representation to MQTT
+type Writer struct {
 	*twomqtt.MQTT
-	config   sinkOpts
-	incoming <-chan sourceRep
+	opts     Opts
+	incoming <-chan shared.Representation
 }
 
-func newSink(mqtt *twomqtt.MQTT, config sinkOpts, incoming <-chan sourceRep) *sink {
-	c := sink{
+// NewWriter creates a new Writer for writing a shared representation to MQTT
+func NewWriter(mqtt *twomqtt.MQTT, opts Opts, incoming <-chan shared.Representation) *Writer {
+	c := Writer{
 		MQTT:     mqtt,
-		config:   config,
+		opts:     opts,
 		incoming: incoming,
 	}
 
@@ -28,18 +31,14 @@ func newSink(mqtt *twomqtt.MQTT, config sinkOpts, incoming <-chan sourceRep) *si
 	return &c
 }
 
-func (c *sink) run() {
-	c.Run()
-}
-
-func (c *sink) discovery() []twomqtt.MQTTDiscovery {
+func (c *Writer) discovery() []twomqtt.MQTTDiscovery {
 	mqds := []twomqtt.MQTTDiscovery{}
 	if !c.Discovery {
 		return mqds
 	}
 
-	for _, deviceName := range c.config.Addresses {
-		obj := reflect.ValueOf(sourceRep{})
+	for _, deviceName := range c.opts.Addresses {
+		obj := reflect.ValueOf(shared.Representation{})
 		for i := 0; i < obj.NumField(); i++ {
 			field := obj.Type().Field(i)
 			sensorName := strings.ToLower(field.Name)
@@ -56,9 +55,9 @@ func (c *sink) discovery() []twomqtt.MQTTDiscovery {
 				sensorName = sensorOverride
 			}
 
-			mqd := twomqtt.NewMQTTDiscovery(c.config.MQTTOpts, deviceName, sensorName, sensorType)
-			mqd.Device.Name = Name
-			mqd.Device.SWVersion = Version
+			mqd := twomqtt.NewMQTTDiscovery(c.opts.MQTTOpts, deviceName, sensorName, sensorType)
+			mqd.Device.Name = shared.Name
+			mqd.Device.SWVersion = shared.Version
 
 			mqds = append(mqds, *mqd)
 		}
@@ -67,16 +66,16 @@ func (c *sink) discovery() []twomqtt.MQTTDiscovery {
 	return mqds
 }
 
-func (c *sink) read() {
+func (c *Writer) read() {
 	for info := range c.incoming {
 		c.publish(info)
 	}
 }
 
-func (c *sink) publish(info sourceRep) []twomqtt.MQTTMessage {
+func (c *Writer) publish(info shared.Representation) []twomqtt.MQTTMessage {
 	published := []twomqtt.MQTTMessage{}
 
-	name := c.config.Addresses[info.Address]
+	name := c.opts.Addresses[info.Address]
 	obj := reflect.ValueOf(info)
 
 	for i := 0; i < obj.NumField(); i++ {
