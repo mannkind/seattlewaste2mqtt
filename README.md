@@ -6,21 +6,30 @@ License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)]
 [![Coverage Status](https://img.shields.io/codecov/c/github/mannkind/seattlewaste2mqtt/master.svg)](http://codecov.io/github/mannkind/seattlewaste2mqtt?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mannkind/seattlewaste2mqtt)](https://goreportcard.com/report/github.com/mannkind/seattlewaste2mqtt)
 
-## Installation
+An experiment to publish Seattle Collection statuses/dates to MQTT.
 
-### Via Docker
+
+## Use
+
+The application can be locally built using `mage` or you can utilize the multi-architecture Docker image(s).
+
+### Example
 
 ```bash
-docker run -d --name="seattlewaste2mqtt" -e "SEATTLEWASTE_ADDRESS=2133 N 61ST ST" -v /etc/localtime:/etc/localtime:ro mannkind/seattlewaste2mqtt
+docker run \
+-e SEATTLEWASTE_ADDRESS="2133 N 61ST ST:home" \
+-e MQTT_BROKER="tcp://localhost:1883" \
+-e MQTT_DISCOVERY="true" \
+mannkind/seattlewaste2mqtt:latest
 ```
 
-### Via Mage
+OR
 
 ```bash
-git clone https://github.com/mannkind/seattlewaste2mqtt
-cd seattlewaste2mqtt
-mage
-SEATTLEWASTE_ADDRESS="2133 N 61ST ST" ./seattlewaste2mqtt
+SEATTLEWASTE_ADDRESS="2133 N 61ST ST:home" \
+MQTT_BROKER="tcp://localhost:1883" \
+MQTT_DISCOVERY="true" \
+./seattlewaste2mqtt 
 ```
 
 ## Configuration
