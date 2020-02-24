@@ -1,6 +1,7 @@
-package main
+package shared
 
-type sourceRep struct {
+// Representation is a data structure for inter-application communication
+type Representation struct {
 	Address          string `mqttDiscoveryType:",ignore"`
 	Start            string `mqttDiscoveryType:"sensor"`
 	Garbage          bool   `mqttDiscoveryType:"binary_sensor"`
