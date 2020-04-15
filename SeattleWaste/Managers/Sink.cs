@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTnet;
-using TwoMQTT.Core.Communication;
 using SeattleWaste.Models.Shared;
+using TwoMQTT.Core.Managers;
 
 namespace SeattleWaste
 {
-    public class SinkManager : MQTTManager<Resource, Command>
+    public class Sink : MQTTManager<Resource, Command>
     {
-        public SinkManager(ILogger<SinkManager> logger, IOptions<Opts> sharedOpts, IOptions<Models.SinkManager.Opts> opts, ChannelReader<Resource> inputChannel, ChannelWriter<Command> outputChannel) :
+        public Sink(ILogger<Sink> logger, IOptions<Opts> sharedOpts, IOptions<Models.SinkManager.Opts> opts, ChannelReader<Resource> inputChannel, ChannelWriter<Command> outputChannel) :
             base(logger, opts, inputChannel, outputChannel)
         {
             this.sharedOpts = sharedOpts.Value;

@@ -12,6 +12,7 @@ namespace SeattleWaste.Models.SourceManager
         public bool Garbage { get; set; } = false;
         public bool Recycling { get; set; } = false;
         public bool FoodAndYardWaste { get; set; } = false;
+        public bool Ok {get; set;} = false;
 
         public override string ToString() => $"Date: {this.Start}, G: {this.Garbage}, R: {this.Recycling}, F: {this.FoodAndYardWaste}";
     }

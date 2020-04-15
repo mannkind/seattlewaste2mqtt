@@ -5,9 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using SeattleWaste.Models.Shared;
-using System.Linq;
-using System.Reflection;
-using System;
+using TwoMQTT.Core;
 
 namespace SeattleWaste
 {
@@ -15,7 +13,7 @@ namespace SeattleWaste
     {
         static async Task Main(string[] args)
         {
-            if (PrintVersion(args))
+            if (AppVersion.PrintVersion<Program>(args))
             {
                 return;
             }
@@ -40,32 +38,15 @@ namespace SeattleWaste
                     services.AddSingleton<ChannelWriter<Resource>>(x => dataComms.Writer);
                     services.AddSingleton<ChannelReader<Command>>(x => commandComms.Reader);
                     services.AddSingleton<ChannelWriter<Command>>(x => commandComms.Writer);
-                    services.AddHttpClient<SourceManager>();
-                    services.AddHostedService<SourceManager>();
-                    services.AddHostedService<SinkManager>();
+                    services.AddHttpClient<Source>();
+                    services.AddHostedService<Source>();
+                    services.AddHostedService<Sink>();
                 })
                 .ConfigureLogging((hostingContext, logging) => {
                     logging.AddConsole();
                 });
 
             await builder.RunConsoleAsync();
-        }
-        
-        static bool PrintVersion(string[] args) 
-        {
-            var param = args?.Skip(1)?.FirstOrDefault() ?? string.Empty;
-            if (param != "version")
-            {
-                return false;
-            }
-
-            var version = Assembly.GetAssembly(typeof(Program))
-                ?.GetName()
-                ?.Version
-                ?.ToString() ?? "0.0.0.0";
-
-            Console.WriteLine($"v{version}");
-            return true;
         }
     }
 }

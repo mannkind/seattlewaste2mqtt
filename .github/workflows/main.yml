@@ -33,9 +33,9 @@ jobs:
         env:
           BUILD_APP: ${{ env.BUILD_APP }}
         run: |
-          dotnet build
-          dotnet test
-          echo "::set-env name=BUILD_VERSION::$(./bin/Debug/netcoreapp3.1/$BUILD_APP -- version)"
+          dotnet build -c Release ${BUILD_APP}
+          dotnet test ${BUILD_APP}Test
+          echo "::set-env name=BUILD_VERSION::$(./${BUILD_APP}/bin/Release/netcoreapp3.1/${BUILD_APP} -- version)"
 
       - name: Build/Push Docker Images (Master)
         env:
@@ -45,9 +45,9 @@ jobs:
           DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
           BUILD_VERSION: ${{ env.BUILD_VERSION }}
         run: |
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          docker buildx build --push --platform=linux/amd64,linux/arm64,linux/arm/v7 -t "$DOCKER_IMAGE:latest" .
-          docker buildx build --push --platform=linux/amd64,linux/arm64,linux/arm/v7 -t "$DOCKER_IMAGE:$BUILD_VERSION" .
+          echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          docker buildx build --push --platform=linux/amd64,linux/arm64,linux/arm/v7 -t "${DOCKER_IMAGE}:latest" .
+          docker buildx build --push --platform=linux/amd64,linux/arm64,linux/arm/v7 -t "${DOCKER_IMAGE}:${BUILD_VERSION}" .
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
       - name: Tag and push the git release
@@ -56,7 +56,7 @@ jobs:
           BUILD_VERSION: ${{ env.BUILD_VERSION }}
         run: |
           git tag -f $BUILD_VERSION
-          sed -i -e "s/github.com/mannkind:$GITHUB_TOKEN@github.com/g" git/config
+          sed -i -e "s/github.com/mannkind:${GITHUB_TOKEN}@github.com/g" git/config
           git push --tags
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
@@ -67,6 +67,6 @@ jobs:
           DOCKER_CLI_EXPERIMENTAL: "enabled"
           DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
         run: |
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          docker buildx build --push --platform=linux/amd64,linux/arm64,linux/arm/v7 -t "$DOCKER_IMAGE:dev" .
+          echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          docker buildx build --push --platform=linux/amd64,linux/arm64,linux/arm/v7 -t "${DOCKER_IMAGE}:dev" .
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
