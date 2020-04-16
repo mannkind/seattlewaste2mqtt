@@ -43,9 +43,9 @@ jobs:
           BUILD_APP: ${{ env.BUILD_APP }}
           BUILD_VERSION: ${{ env.BUILD_VERSION }}
         run: |
-          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/x86_64 -r linux-x64 ${BUILD_APP}
-          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/aarch64 -r linux-arm64 ${BUILD_APP}
-          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/arm7l -r linux-arm ${BUILD_APP}
+          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/linux/amd64 -r linux-x64 ${BUILD_APP}
+          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/linux/arm64 -r linux-arm64 ${BUILD_APP}
+          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/linux/arm/v7 -r linux-arm ${BUILD_APP}
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
 
       - name: Build/Push Docker Images (Master)
