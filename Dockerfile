@@ -1,8 +1,9 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine as build
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as build
 WORKDIR /src
 COPY . .
-RUN dotnet build -c release -o output SeattleWaste
+RUN if [ ! -d output/`uname -m` ]; then dotnet build -o output/`uname -m` -c Release SeattleWaste; fi \
+    && cp -r output/`uname -m` archoutput
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1-alpine AS runtime
-COPY --from=build /src/output .
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1 AS runtime
+COPY --from=build /src/archoutput .
 ENTRYPOINT ["./SeattleWaste"]

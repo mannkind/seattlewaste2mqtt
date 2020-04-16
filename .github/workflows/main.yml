@@ -37,6 +37,16 @@ jobs:
           dotnet test ${BUILD_APP}Test
           echo "::set-env name=BUILD_VERSION::$(./${BUILD_APP}/bin/Release/netcoreapp3.1/${BUILD_APP} -- version)"
 
+      - name: Build various runtimes
+        env:
+          BUILD_APP: ${{ env.BUILD_APP }}
+          BUILD_VERSION: ${{ env.BUILD_VERSION }}
+        run: |
+          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/x86_64 -r linux-x64 ${BUILD_APP}
+          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/aarch64 -r linux-arm64 ${BUILD_APP}
+          dotnet build -p:Version="${BUILD_VERSION/v/}" -c Release -o output/arm7l -r linux-arm ${BUILD_APP}
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
+
       - name: Build/Push Docker Images (Master)
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
