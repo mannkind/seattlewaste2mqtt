@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SeattleWaste.Models.Shared
 {
@@ -9,6 +10,11 @@ namespace SeattleWaste.Models.Shared
     {
         public const string Section = "SeattleWaste:Shared";
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="SlugMapping"></typeparam>
+        /// <returns></returns>
         public List<SlugMapping> Resources { get; set; } = new List<SlugMapping>();
     }
 }

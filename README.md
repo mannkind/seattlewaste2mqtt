@@ -38,9 +38,9 @@ SEATTLEWASTE__SINK__DISCOVERYENABLED="true" \
 Configuration happens via environmental variables
 
 ```bash
+SEATTLEWASTE__SHARED__RESOURCES__#__Address      - The Address for a specific collection
+SEATTLEWASTE__SHARED__RESOURCES__#__Slug         - The slug to identify the specific address
 SEATTLEWASTE__SOURCE__POLLINGINTERVAL            - [OPTIONAL] The delay between collection lookups, defaults to "0.08:03:31"
-SEATTLEWASTE__SHARED__RESOURCES__#__Address      - The Address (e.g. 2133 N 61ST ST)
-SEATTLEWASTE__SHARED__RESOURCES__#__Slug         - The slug for the Address (e.g. Home)
 SEATTLEWASTE__SINK__TOPICPREFIX                  - [OPTIONAL] The MQTT topic on which to publish the collection lookup results, defaults to "home/seattle_waste"
 SEATTLEWASTE__SINK__DISCOVERYENABLED             - [OPTIONAL] The MQTT discovery flag for Home Assistant, defaults to false
 SEATTLEWASTE__SINK__DISCOVERYPREFIX              - [OPTIONAL] The MQTT discovery prefix for Home Assistant, defaults to "homeassistant"

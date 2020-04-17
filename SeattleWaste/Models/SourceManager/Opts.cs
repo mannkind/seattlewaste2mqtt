@@ -9,9 +9,16 @@ namespace SeattleWaste.Models.SourceManager
     {
         public const string Section = "SeattleWaste:Source";
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public TimeSpan AlertWithin { get; set; } = new TimeSpan(24, 0, 0);
-        public TimeSpan PollingInterval { get; set; } = new TimeSpan(8, 3, 31);
 
-        public override string ToString() => $"Alert Within: {this.AlertWithin}, Polling Interval: {this.PollingInterval}";
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public TimeSpan PollingInterval { get; set; } = new TimeSpan(8, 3, 31);
     }
 }

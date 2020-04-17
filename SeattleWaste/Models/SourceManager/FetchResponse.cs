@@ -1,11 +1,11 @@
 using System;
 
-namespace SeattleWaste.Models.Shared
+namespace SeattleWaste.Models.SourceManager
 {
     /// <summary>
-    /// The shared resource across the application
+    /// The response from the source
     /// </summary>
-    public class Resource
+    public class FetchResponse
     {
         /// <summary>
         /// 
@@ -17,7 +17,7 @@ namespace SeattleWaste.Models.Shared
         /// 
         /// </summary>
         /// <value></value>
-        public DateTime Start { get; set; } = DateTime.MaxValue;
+        public DateTime Start { get; set; } = DateTime.MinValue;
 
         /// <summary>
         /// 
@@ -36,12 +36,6 @@ namespace SeattleWaste.Models.Shared
         /// </summary>
         /// <value></value>
         public bool FoodAndYardWaste { get; set; } = false;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <value></value>
-        public bool Status { get; set; } = false;
 
         /// <inheritdoc />
         public override string ToString() => $"Date: {this.Start}, G: {this.Garbage}, R: {this.Recycling}, F: {this.FoodAndYardWaste}";

@@ -9,6 +9,9 @@ namespace SeattleWaste.Models.SinkManager
     {
         public const string Section = "SeattleWaste:Sink";
 
+        /// <summary>
+        /// 
+        /// </summary>
         public Opts()
         {
             this.TopicPrefix = "home/seattle_waste";
