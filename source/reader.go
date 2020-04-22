@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mannkind/seattlewaste"
+	"github.com/mannkind/seattlewaste2mqtt/lib"
 	"github.com/mannkind/seattlewaste2mqtt/shared"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
@@ -72,7 +72,7 @@ func (c *Reader) poll() {
 	}).Info("Finished polling; sleeping")
 }
 
-func (c *Reader) adapt(address string, info *seattlewaste.Collection) shared.Representation {
+func (c *Reader) adapt(address string, info *lib.Collection) shared.Representation {
 	obj := shared.Representation{
 		Address:          address,
 		Start:            info.Start,

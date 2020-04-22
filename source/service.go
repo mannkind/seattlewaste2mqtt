@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mannkind/seattlewaste"
+	"github.com/mannkind/seattlewaste2mqtt/lib"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,12 +19,12 @@ func NewService() *Service {
 	return &c
 }
 
-func (c *Service) lookup(address string, now time.Time, alertWithin time.Duration) (*seattlewaste.Collection, error) {
+func (c *Service) lookup(address string, now time.Time, alertWithin time.Duration) (*lib.Collection, error) {
 	log.WithFields(log.Fields{
 		"address": address,
 	}).Info("Looking up collection information for address")
 
-	swclient := seattlewaste.NewClient(address)
+	swclient := lib.NewClient(address)
 
 	localLoc, _ := time.LoadLocation("Local")
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, localLoc)
