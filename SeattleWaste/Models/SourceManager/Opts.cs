@@ -7,7 +7,7 @@ namespace SeattleWaste.Models.SourceManager
     /// </summary>
     public class Opts
     {
-        public const string Section = "SeattleWaste:Source";
+        public const string Section = "SeattleWaste";
 
         /// <summary>
         /// 

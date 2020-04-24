@@ -26,7 +26,7 @@ namespace SeattleWaste.Managers
         protected override void LogSettings() =>
             this.Logger.LogInformation(
                 $"PollingInterval: {this.Opts.PollingInterval}\n" +
-                $"Resources: {this.SharedOpts.Resources.Select(x => $"{x.Address}:{x.Slug}")}\n" +
+                $"Resources: {string.Join(',', this.SharedOpts.Resources.Select(x => $"{x.Address}:{x.Slug}"))}\n" +
                 $""
             );
 

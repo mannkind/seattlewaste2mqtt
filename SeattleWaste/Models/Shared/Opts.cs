@@ -8,7 +8,7 @@ namespace SeattleWaste.Models.Shared
     /// </summary>
     public class Opts
     {
-        public const string Section = "SeattleWaste:Shared";
+        public const string Section = "SeattleWaste";
 
         /// <summary>
         /// 

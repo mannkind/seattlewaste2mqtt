@@ -15,20 +15,20 @@ The application can be locally built using `dotnet build` or you can utilize the
 
 ```bash
 docker run \
--e SEATTLEWASTE__SHARED__RESOURCES__0__Address="2133 N 61ST ST" \
--e SEATTLEWASTE__SHARED__RESOURCES__0__Slug="home" \
--e SEATTLEWASTE__SINK__BROKER="localhost" \
--e SEATTLEWASTE__SINK__DISCOVERYENABLED="true" \
+-e SEATTLEWASTE__RESOURCES__0__Address="2133 N 61ST ST" \
+-e SEATTLEWASTE__RESOURCES__0__Slug="home" \
+-e SEATTLEWASTE__MQTT__BROKER="localhost" \
+-e SEATTLEWASTE__MQTT__DISCOVERYENABLED="true" \
 mannkind/seattlewaste2mqtt:latest
 ```
 
 OR
 
 ```bash
-SEATTLEWASTE__SHARED__RESOURCES__0__Address="2133 N 61ST ST" \
-SEATTLEWASTE__SHARED__RESOURCES__0__Slug="home" \
-SEATTLEWASTE__SINK__BROKER="localhost" \
-SEATTLEWASTE__SINK__DISCOVERYENABLED="true" \
+SEATTLEWASTE__RESOURCES__0__Address="2133 N 61ST ST" \
+SEATTLEWASTE__RESOURCES__0__Slug="home" \
+SEATTLEWASTE__MQTT__BROKER="localhost" \
+SEATTLEWASTE__MQTT__DISCOVERYENABLED="true" \
 ./seattlewaste2mqtt 
 ```
 
@@ -38,14 +38,14 @@ SEATTLEWASTE__SINK__DISCOVERYENABLED="true" \
 Configuration happens via environmental variables
 
 ```bash
-SEATTLEWASTE__SHARED__RESOURCES__#__Address      - The Address for a specific collection
-SEATTLEWASTE__SHARED__RESOURCES__#__Slug         - The slug to identify the specific address
-SEATTLEWASTE__SOURCE__POLLINGINTERVAL            - [OPTIONAL] The delay between collection lookups, defaults to "0.08:03:31"
-SEATTLEWASTE__SINK__TOPICPREFIX                  - [OPTIONAL] The MQTT topic on which to publish the collection lookup results, defaults to "home/seattle_waste"
-SEATTLEWASTE__SINK__DISCOVERYENABLED             - [OPTIONAL] The MQTT discovery flag for Home Assistant, defaults to false
-SEATTLEWASTE__SINK__DISCOVERYPREFIX              - [OPTIONAL] The MQTT discovery prefix for Home Assistant, defaults to "homeassistant"
-SEATTLEWASTE__SINK__DISCOVERYNAME                - [OPTIONAL] The MQTT discovery name for Home Assistant, defaults to "seattle_waste"
-SEATTLEWASTE__SINK__BROKER                       - [OPTIONAL] The MQTT broker, defaults to "test.mosquitto.org"
-SEATTLEWASTE__SINK__USERNAME                     - [OPTIONAL] The MQTT username, default to ""
-SEATTLEWASTE__SINK__PASSWORD                     - [OPTIONAL] The MQTT password, default to ""
+SEATTLEWASTE__RESOURCES__#__Address              - The Address for a specific collection
+SEATTLEWASTE__RESOURCES__#__Slug                 - The slug to identify the specific address
+SEATTLEWASTE__POLLINGINTERVAL                    - [OPTIONAL] The delay between collection lookups, defaults to "0.08:03:31"
+SEATTLEWASTE__MQTT__TOPICPREFIX                  - [OPTIONAL] The MQTT topic on which to publish the collection lookup results, defaults to "home/seattle_waste"
+SEATTLEWASTE__MQTT__DISCOVERYENABLED             - [OPTIONAL] The MQTT discovery flag for Home Assistant, defaults to false
+SEATTLEWASTE__MQTT__DISCOVERYPREFIX              - [OPTIONAL] The MQTT discovery prefix for Home Assistant, defaults to "homeassistant"
+SEATTLEWASTE__MQTT__DISCOVERYNAME                - [OPTIONAL] The MQTT discovery name for Home Assistant, defaults to "seattle_waste"
+SEATTLEWASTE__MQTT__BROKER                       - [OPTIONAL] The MQTT broker, defaults to "test.mosquitto.org"
+SEATTLEWASTE__MQTT__USERNAME                     - [OPTIONAL] The MQTT username, default to ""
+SEATTLEWASTE__MQTT__PASSWORD                     - [OPTIONAL] The MQTT password, default to ""
 ```

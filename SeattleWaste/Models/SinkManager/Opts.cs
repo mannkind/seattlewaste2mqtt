@@ -7,7 +7,7 @@ namespace SeattleWaste.Models.SinkManager
     /// </summary>
     public class Opts : MQTTManagerOptions
     {
-        public const string Section = "SeattleWaste:Sink";
+        public const string Section = "SeattleWaste:MQTT";
 
         /// <summary>
         /// 
