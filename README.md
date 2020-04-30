@@ -49,3 +49,9 @@ SEATTLEWASTE__MQTT__BROKER                       - [OPTIONAL] The MQTT broker, d
 SEATTLEWASTE__MQTT__USERNAME                     - [OPTIONAL] The MQTT username, default to ""
 SEATTLEWASTE__MQTT__PASSWORD                     - [OPTIONAL] The MQTT password, default to ""
 ```
+
+## Prior Implementations
+
+### Golang
+* Last Commit: [efddb0703cb0e309c98f6f801ebf46da7ae12193](https://github.com/mannkind/seattlewaste2mqtt/commit/efddb0703cb0e309c98f6f801ebf46da7ae12193)
+* Last Docker Image: [mannkind/seattlewaste2mqtt:v0.15.20055.0754](https://hub.docker.com/layers/mannkind/seattlewaste2mqtt/v0.15.20055.0754/images/sha256-6ad7368c88c46326e2ef755053885c113e35981081de38077ff73cf4d4ec08d4?context=explore)

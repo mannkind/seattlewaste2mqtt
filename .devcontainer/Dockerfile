@@ -30,7 +30,7 @@ RUN apt-get update \
     && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
     #
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
-    && apt-get -y install git iproute2 procps apt-transport-https gnupg2 curl lsb-release mosquitto mosquitto-clients \
+    && apt-get -y install git iproute2 procps apt-transport-https gnupg2 curl lsb-release vim mosquitto mosquitto-clients \
     #
     # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
     && groupadd --gid $USER_GID $USERNAME \

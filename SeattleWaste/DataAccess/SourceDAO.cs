@@ -1,12 +1,12 @@
+using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System;
-using System.Net.Http;
-using System.Net;
 using SeattleWaste.Models.Shared;
 using TwoMQTT.Core.DataAccess;
 

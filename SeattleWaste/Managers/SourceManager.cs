@@ -1,12 +1,12 @@
-using System.Threading.Channels;
+using System;
 using System.Linq;
+using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 using SeattleWaste.Models.Shared;
-using TwoMQTT.Core.Managers;
 using SeattleWaste.Models.SourceManager;
 using TwoMQTT.Core.DataAccess;
+using TwoMQTT.Core.Managers;
 
 namespace SeattleWaste.Managers
 {
