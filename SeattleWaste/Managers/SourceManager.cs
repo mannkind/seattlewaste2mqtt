@@ -15,20 +15,19 @@ namespace SeattleWaste.Managers
     /// </summary>
     public class SourceManager : HTTPPollingManager<SlugMapping, FetchResponse, object, Resource, Command>
     {
-        public SourceManager(ILogger<SourceManager> logger, IOptions<Models.Shared.Opts> sharedOpts, IOptions<Models.SourceManager.Opts> opts, ChannelWriter<Resource> outgoing, ChannelReader<Command> incoming, IHTTPSourceDAO<SlugMapping, Command, FetchResponse, object> sourceDAO) :
-            base(logger, outgoing, incoming, sharedOpts.Value.Resources, opts.Value.PollingInterval, sourceDAO)
+        public SourceManager(ILogger<SourceManager> logger, IOptions<Models.Shared.Opts> sharedOpts,
+            IOptions<Models.SourceManager.Opts> opts, ChannelWriter<Resource> outgoing, ChannelReader<Command> incoming,
+            IHTTPSourceDAO<SlugMapping, Command, FetchResponse, object> sourceDAO) :
+            base(logger, outgoing, incoming, sharedOpts.Value.Resources, opts.Value.PollingInterval, sourceDAO,
+                SourceSettings(sharedOpts.Value, opts.Value))
         {
-            this.Opts = opts.Value;
-            this.SharedOpts = sharedOpts.Value;
+            this.AlertWithin = opts.Value.AlertWithin;
         }
 
-        /// <inheritdoc />
-        protected override void LogSettings() =>
-            this.Logger.LogInformation(
-                $"PollingInterval: {this.Opts.PollingInterval}\n" +
-                $"Resources: {string.Join(',', this.SharedOpts.Resources.Select(x => $"{x.Address}:{x.Slug}"))}\n" +
-                $""
-            );
+        /// <summary>
+        /// The timespan before which the alert flag should be set.
+        /// </summary>
+        protected readonly TimeSpan AlertWithin;
 
         /// <inheritdoc />
         protected override Resource MapResponse(FetchResponse src) =>
@@ -39,17 +38,12 @@ namespace SeattleWaste.Managers
                 Garbage = src.Garbage,
                 Recycling = src.Recycling,
                 FoodAndYardWaste = src.FoodAndYardWaste,
-                Status = src.Start.Subtract(DateTime.Now) <= this.Opts.AlertWithin,
+                Status = src.Start.Subtract(DateTime.Now) <= this.AlertWithin,
             };
 
-        /// <summary>
-        /// The options for the source.
-        /// </summary>
-        private readonly Models.SourceManager.Opts Opts;
-
-        /// <summary>
-        /// The options that are shared.
-        /// </summary>
-        private readonly Models.Shared.Opts SharedOpts;
+        private static string SourceSettings(Models.Shared.Opts sharedOpts, Models.SourceManager.Opts opts) =>
+            $"PollingInterval: {opts.PollingInterval}\n" +
+            $"Resources: {string.Join(',', sharedOpts.Resources.Select(x => $"{x.Address}:{x.Slug}"))}\n" +
+            $"";
     }
 }
