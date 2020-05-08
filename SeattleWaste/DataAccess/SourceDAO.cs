@@ -68,7 +68,7 @@ namespace SeattleWaste.DataAccess
                 foreach (var collection in collections)
                 {
                     lastTimeStamp = ((DateTimeOffset)collection.Start).ToUnixTimeSeconds();
-                    if (lastTimeStamp < todayTimeStamp)
+                    if (lastTimeStamp <= todayTimeStamp)
                     {
                         continue;
                     }
