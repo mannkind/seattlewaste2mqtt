@@ -42,11 +42,14 @@ namespace SeattleWaste
                 .Select(x => x.Slug)
                 .FirstOrDefault() ?? string.Empty;
 
+            this.Logger.LogDebug($"Found slug {slug} for incoming data for {input.Address}");
             if (string.IsNullOrEmpty(slug))
             {
+                this.Logger.LogDebug($"Unable to find slug for {input.Address}");
                 return;
             }
 
+            this.Logger.LogDebug($"Started publishing data for slug {slug}");
             await Task.WhenAll(
                 this.PublishAsync(
                     this.StateTopic(slug, nameof(Resource.Start)), input.Start.ToShortDateString(),
@@ -69,7 +72,7 @@ namespace SeattleWaste
                     cancellationToken
                 )
             );
-
+            this.Logger.LogDebug($"Finished publishing data for slug {slug}");
         }
 
         /// <inheritdoc />

@@ -57,6 +57,7 @@ namespace SeattleWaste.DataAccess
         private async Task<Models.SourceManager.FetchResponse?> FetchAsync(string address,
             CancellationToken cancellationToken = default)
         {
+            this.Logger.LogDebug($"Started finding {address} from Seattle Waste");
             var apiCalls = 0;
             var lastTimeStamp = 0L;
             var todayTimeStamp = ((DateTimeOffset)DateTime.Today).ToUnixTimeSeconds();
@@ -64,6 +65,7 @@ namespace SeattleWaste.DataAccess
             // Limit the number of times we'll hit the source before giving up
             while (lastTimeStamp < todayTimeStamp && apiCalls <= MAX_API_CALLS)
             {
+                this.Logger.LogDebug($"{apiCalls} iteration;  timestamp {lastTimeStamp}");
                 var collections = await this.FetchAllAsync(address, lastTimeStamp, cancellationToken);
                 foreach (var collection in collections)
                 {
@@ -89,12 +91,14 @@ namespace SeattleWaste.DataAccess
         private async Task<IEnumerable<Models.SourceManager.FetchResponse>> FetchAllAsync(string address, long start,
             CancellationToken cancellationToken = default)
         {
+            this.Logger.LogDebug($"Started finding collection days for {address} @ {start} from Seattle Waste");
             var baseUrl = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCollectionDays";
             var query = $"pApp=CC&pAddress={WebUtility.UrlEncode(address)}&start={start}";
             var resp = await this.Client.GetAsync($"{baseUrl}?{query}", cancellationToken);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync();
             var obj = JsonConvert.DeserializeObject<List<Models.SourceManager.FetchResponse>>(content);
+            this.Logger.LogDebug($"Finished finding collection days for {address} @ {start} from Seattle Waste");
 
             return obj;
         }
