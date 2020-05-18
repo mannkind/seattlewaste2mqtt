@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SeattleWaste.Models.Shared;
 using TwoMQTT.Core.DataAccess;
@@ -21,11 +20,9 @@ namespace SeattleWaste.DataAccess
         /// Initializes a new instance of the SourceDAO class.
         /// </summary>
         /// <param name="logger"></param>
-        /// <param name="opts"></param>
         /// <param name="httpClientFactory"></param>
         /// <returns></returns>
-        public SourceDAO(ILogger<SourceDAO> logger, IOptions<Models.SourceManager.Opts> opts,
-            IHttpClientFactory httpClientFactory) :
+        public SourceDAO(ILogger<SourceDAO> logger, IHttpClientFactory httpClientFactory) :
             base(logger, httpClientFactory)
         {
         }
