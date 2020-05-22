@@ -15,7 +15,7 @@ using TwoMQTT.Core.Extensions;
 
 namespace SeattleWaste
 {
-    class Program : ConsoleProgram
+    class Program : ConsoleProgram<Resource, Command, SourceManager, SinkManager>
     {
         static async Task Main(string[] args)
         {
@@ -25,18 +25,13 @@ namespace SeattleWaste
 
         protected override IServiceCollection ConfigureServices(HostBuilderContext hostContext, IServiceCollection services)
         {
-            var sharedSect = hostContext.Configuration.GetSection(Models.Shared.Opts.Section);
-            var sourceSect = hostContext.Configuration.GetSection(Models.SourceManager.Opts.Section);
-            var sinkSect = hostContext.Configuration.GetSection(Models.SinkManager.Opts.Section);
-
-            services.AddHttpClient<IHTTPSourceDAO<SlugMapping, Command, Models.SourceManager.FetchResponse, object>>();
-            services.AddTransient<IHTTPSourceDAO<SlugMapping, Command, Models.SourceManager.FetchResponse, object>, SourceDAO>();
+            services.AddHttpClient<ISourceDAO<SlugMapping, Command, Models.SourceManager.FetchResponse, object>>();
 
             return services
-                .Configure<Models.Shared.Opts>(sharedSect)
-                .Configure<Models.SourceManager.Opts>(sourceSect)
-                .Configure<Models.SinkManager.Opts>(sinkSect)
-                .ConfigureBidirectionalSourceSink<Resource, Command, SourceManager, SinkManager>();
+                .ConfigureOpts<Models.Shared.Opts>(hostContext, Models.Shared.Opts.Section)
+                .ConfigureOpts<Models.SourceManager.Opts>(hostContext, Models.SourceManager.Opts.Section)
+                .ConfigureOpts<Models.SinkManager.Opts>(hostContext, Models.SinkManager.Opts.Section)
+                .AddTransient<ISourceDAO<SlugMapping, Command, Models.SourceManager.FetchResponse, object>, SourceDAO>();
         }
 
         [Obsolete("Remove in the near future.")]

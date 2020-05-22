@@ -14,7 +14,7 @@ namespace SeattleWaste.DataAccess
     /// <summary>
     /// An class representing a managed way to interact with a source.
     /// </summary>
-    public class SourceDAO : HTTPSourceDAO<SlugMapping, Command, Models.SourceManager.FetchResponse, object>
+    public class SourceDAO : SourceDAO<SlugMapping, Command, Models.SourceManager.FetchResponse, object>
     {
         /// <summary>
         /// Initializes a new instance of the SourceDAO class.
@@ -23,8 +23,9 @@ namespace SeattleWaste.DataAccess
         /// <param name="httpClientFactory"></param>
         /// <returns></returns>
         public SourceDAO(ILogger<SourceDAO> logger, IHttpClientFactory httpClientFactory) :
-            base(logger, httpClientFactory)
+            base(logger)
         {
+            this.Client = httpClientFactory.CreateClient();
         }
 
         /// <inheritdoc />
@@ -44,6 +45,11 @@ namespace SeattleWaste.DataAccess
                 return null;
             }
         }
+
+        /// <summary>
+        /// The HTTP client used to access the source.
+        /// </summary>
+        private readonly HttpClient Client;
 
         /// <summary>
         /// Fetch one response from the source.
