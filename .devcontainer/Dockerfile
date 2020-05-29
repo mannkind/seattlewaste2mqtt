@@ -18,6 +18,7 @@ ARG USER_GID=$USER_UID
 ARG INSTALL_NODE="true"
 ARG NODE_VERSION="lts/*"
 ENV NVM_DIR=/home/vscode/.nvm
+ENV TZ America/Los_Angeles
 
 # [Optional] Install the Azure CLI
 ARG INSTALL_AZURE_CLI="false"

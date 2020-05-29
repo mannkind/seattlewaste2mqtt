@@ -66,7 +66,7 @@ namespace SeattleWaste.DataAccess
             var todayTimeStamp = ((DateTimeOffset)DateTime.Today).ToUnixTimeSeconds();
 
             // Limit the number of times we'll hit the source before giving up
-            while (lastTimeStamp < todayTimeStamp && apiCalls <= MAX_API_CALLS)
+            while (lastTimeStamp <= todayTimeStamp && apiCalls <= MAX_API_CALLS)
             {
                 this.Logger.LogDebug($"{apiCalls} iteration;  timestamp {lastTimeStamp}");
                 var collections = await this.FetchAllAsync(address, lastTimeStamp, cancellationToken);
