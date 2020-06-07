@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using SeattleWaste.Models.Shared;
 using TwoMQTT.Core;
 using TwoMQTT.Core.Managers;
+using TwoMQTT.Core.Models;
 
 namespace SeattleWaste
 {
@@ -76,14 +77,9 @@ namespace SeattleWaste
         }
 
         /// <inheritdoc />
-        protected override async Task HandleDiscoveryAsync(CancellationToken cancellationToken = default)
+        protected override IEnumerable<(string slug, string sensor, string type, MQTTDiscovery discovery)> Discoveries()
         {
-            if (!this.Opts.DiscoveryEnabled)
-            {
-                return;
-            }
-
-            var tasks = new List<Task>();
+            var discoveries = new List<(string, string, string, MQTTDiscovery)>();
             var assembly = Assembly.GetAssembly(typeof(Program))?.GetName() ?? new AssemblyName();
             var mapping = new[]
             {
@@ -99,11 +95,11 @@ namespace SeattleWaste
                 foreach (var map in mapping)
                 {
                     var discovery = this.BuildDiscovery(input.Slug, map.Sensor, assembly, false);
-                    tasks.Add(this.PublishDiscoveryAsync(input.Slug, map.Sensor, map.Type, discovery, cancellationToken));
+                    discoveries.Add((input.Slug, map.Sensor, map.Type, discovery));
                 }
             }
 
-            await Task.WhenAll(tasks);
+            return discoveries;
         }
     }
 }
