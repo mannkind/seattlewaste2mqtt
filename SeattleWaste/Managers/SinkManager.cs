@@ -6,6 +6,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MQTTnet.Extensions.ManagedClient;
 using SeattleWaste.Models.Shared;
 using TwoMQTT.Core;
 using TwoMQTT.Core.Managers;
@@ -27,10 +28,9 @@ namespace SeattleWaste
         /// <param name="incomingData"></param>
         /// <param name="outgoingCommand"></param>
         /// <returns></returns>
-        public SinkManager(ILogger<SinkManager> logger, IOptions<Opts> sharedOpts,
-            IOptions<Models.SinkManager.Opts> opts, ChannelReader<Resource> incomingData,
-            ChannelWriter<Command> outgoingCommand) :
-            base(logger, opts, incomingData, outgoingCommand, sharedOpts.Value.Resources, string.Empty)
+        public SinkManager(ILogger<SinkManager> logger, IOptions<Opts> sharedOpts, IOptions<Models.SinkManager.Opts> opts,
+            IManagedMqttClient client, ChannelReader<Resource> incomingData, ChannelWriter<Command> outgoingCommand) :
+            base(logger, opts, client, incomingData, outgoingCommand, sharedOpts.Value.Resources, string.Empty)
         {
         }
 
@@ -51,28 +51,15 @@ namespace SeattleWaste
             }
 
             this.Logger.LogDebug($"Started publishing data for slug {slug}");
-            await Task.WhenAll(
-                this.PublishAsync(
-                    this.StateTopic(slug, nameof(Resource.Start)), input.Start.ToShortDateString(),
-                    cancellationToken
-                ),
-                this.PublishAsync(
-                    this.StateTopic(slug, nameof(Resource.Garbage)), this.BooleanOnOff(input.Garbage),
-                    cancellationToken
-                ),
-                this.PublishAsync(
-                    this.StateTopic(slug, nameof(Resource.Recycling)), this.BooleanOnOff(input.Recycling),
-                    cancellationToken
-                ),
-                this.PublishAsync(
-                    this.StateTopic(slug, nameof(Resource.FoodAndYardWaste)), this.BooleanOnOff(input.FoodAndYardWaste),
-                    cancellationToken
-                ),
-                this.PublishAsync(
-                    this.StateTopic(slug, nameof(Resource.Status)), this.BooleanOnOff(input.Status),
-                    cancellationToken
-                )
-            );
+            var publish = new[]
+            {
+                (this.StateTopic(slug, nameof(Resource.Start)), input.Start.ToShortDateString()),
+                (this.StateTopic(slug, nameof(Resource.Garbage)), this.BooleanOnOff(input.Garbage)),
+                (this.StateTopic(slug, nameof(Resource.Recycling)), this.BooleanOnOff(input.Recycling)),
+                (this.StateTopic(slug, nameof(Resource.FoodAndYardWaste)), this.BooleanOnOff(input.FoodAndYardWaste)),
+                (this.StateTopic(slug, nameof(Resource.Status)), this.BooleanOnOff(input.Status)),
+            };
+            await this.PublishAsync(publish, cancellationToken);
             this.Logger.LogDebug($"Finished publishing data for slug {slug}");
         }
 
