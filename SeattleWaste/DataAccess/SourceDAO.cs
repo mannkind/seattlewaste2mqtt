@@ -7,14 +7,19 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SeattleWaste.Models.Shared;
-using TwoMQTT.Core.DataAccess;
+using SeattleWaste.Models.Source;
 
 namespace SeattleWaste.DataAccess
 {
+    public interface ISourceDAO
+    {
+        Task<FetchResponse?> FetchOneAsync(SlugMapping key, CancellationToken cancellationToken = default);
+    }
+
     /// <summary>
     /// An class representing a managed way to interact with a source.
     /// </summary>
-    public class SourceDAO : SourceDAO<SlugMapping, Command, Models.SourceManager.FetchResponse, object>
+    public class SourceDAO : ISourceDAO
     {
         /// <summary>
         /// Initializes a new instance of the SourceDAO class.
@@ -22,14 +27,19 @@ namespace SeattleWaste.DataAccess
         /// <param name="logger"></param>
         /// <param name="httpClientFactory"></param>
         /// <returns></returns>
-        public SourceDAO(ILogger<SourceDAO> logger, IHttpClientFactory httpClientFactory) :
-            base(logger)
+        public SourceDAO(ILogger<SourceDAO> logger, IHttpClientFactory httpClientFactory)
         {
+            this.Logger = logger;
             this.Client = httpClientFactory.CreateClient();
         }
 
-        /// <inheritdoc />
-        public override async Task<Models.SourceManager.FetchResponse?> FetchOneAsync(SlugMapping key,
+        /// <summary>
+        /// Fetch one response from the source.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<FetchResponse?> FetchOneAsync(SlugMapping key,
             CancellationToken cancellationToken = default)
         {
             try
@@ -53,7 +63,7 @@ namespace SeattleWaste.DataAccess
         /// <param name="address"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected async Task<Models.SourceManager.FetchResponse?> FetchAsync(string address,
+        protected async Task<FetchResponse?> FetchAsync(string address,
             long todayTimeStamp,
             long lastTimeStamp,
             CancellationToken cancellationToken = default)
@@ -85,14 +95,24 @@ namespace SeattleWaste.DataAccess
         }
 
         /// <summary>
-        /// The HTTP client used to access the source.
+        /// The logger used internally.
+        /// </summary>
+        private readonly ILogger<SourceDAO> Logger;
+
+        /// <summary>
+        /// The client used to access the source.
         /// </summary>
         private readonly HttpClient Client;
 
         /// <summary>
+        /// The max number of times to hit the API
+        /// </summary>
+        private const int MAX_API_CALLS = 5;
+
+        /// <summary>
         /// Fetch all records from the source.
         /// </summary>
-        private async Task<IEnumerable<Models.SourceManager.FetchResponse>> FetchAllAsync(string address, long start,
+        private async Task<IEnumerable<FetchResponse>> FetchAllAsync(string address, long start,
             CancellationToken cancellationToken = default)
         {
             this.Logger.LogDebug($"Started finding collection days for {address} @ {start} from Seattle Waste");
@@ -101,12 +121,10 @@ namespace SeattleWaste.DataAccess
             var resp = await this.Client.GetAsync($"{baseUrl}?{query}", cancellationToken);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync();
-            var obj = JsonConvert.DeserializeObject<List<Models.SourceManager.FetchResponse>>(content);
+            var obj = JsonConvert.DeserializeObject<List<FetchResponse>>(content);
             this.Logger.LogDebug($"Finished finding collection days for {address} @ {start} from Seattle Waste");
 
             return obj;
         }
-
-        private const int MAX_API_CALLS = 5;
     }
 }
