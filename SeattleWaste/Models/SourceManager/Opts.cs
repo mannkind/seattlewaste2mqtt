@@ -13,12 +13,6 @@ namespace SeattleWaste.Models.SourceManager
         /// 
         /// </summary>
         /// <returns></returns>
-        public TimeSpan AlertWithin { get; set; } = new TimeSpan(24, 0, 0);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         public TimeSpan PollingInterval { get; set; } = new TimeSpan(8, 3, 31);
     }
 }

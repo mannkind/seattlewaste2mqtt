@@ -42,7 +42,6 @@ namespace SeattleWaste
             var mappings = new[]
             {
                 new { Src = "SEATTLEWASTE_ADDRESS", Dst = "SEATTLEWASTE__RESOURCES", CanMap = true, Strip = "",  Sep = ":" },
-                new { Src = "SEATTLEWASTE_ALERTWITHIN", Dst = "SEATTLEWASTE__ALERTWITHIN", CanMap = false, Strip = "", Sep = "" },
                 new { Src = "SEATTLEWASTE_LOOKUPINTERVAL", Dst = "SEATTLEWASTE__POLLINGINTERVAL", CanMap = false, Strip = "", Sep = "" },
                 new { Src = "MQTT_TOPICPREFIX", Dst = "SEATTLEWASTE__MQTT__TOPICPREFIX", CanMap = true, Strip = "", Sep = "" },
                 new { Src = "MQTT_DISCOVERY", Dst = "SEATTLEWASTE__MQTT__DISCOVERYENABLED", CanMap = true, Strip = "", Sep = "" },

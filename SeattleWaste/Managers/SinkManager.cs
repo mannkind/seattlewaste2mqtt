@@ -57,7 +57,6 @@ namespace SeattleWaste
                 (this.StateTopic(slug, nameof(Resource.Garbage)), this.BooleanOnOff(input.Garbage)),
                 (this.StateTopic(slug, nameof(Resource.Recycling)), this.BooleanOnOff(input.Recycling)),
                 (this.StateTopic(slug, nameof(Resource.FoodAndYardWaste)), this.BooleanOnOff(input.FoodAndYardWaste)),
-                (this.StateTopic(slug, nameof(Resource.Status)), this.BooleanOnOff(input.Status)),
             };
             await this.PublishAsync(publish, cancellationToken);
             this.Logger.LogDebug($"Finished publishing data for slug {slug}");
@@ -74,7 +73,6 @@ namespace SeattleWaste
                 new { Sensor = nameof(Resource.Garbage), Type = Const.BINARY_SENSOR },
                 new { Sensor = nameof(Resource.Recycling), Type = Const.BINARY_SENSOR },
                 new { Sensor = nameof(Resource.FoodAndYardWaste), Type = Const.BINARY_SENSOR },
-                new { Sensor = nameof(Resource.Status), Type = Const.BINARY_SENSOR },
             };
 
             foreach (var input in this.Questions)

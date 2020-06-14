@@ -37,12 +37,6 @@ namespace SeattleWaste.Models.Shared
         /// <value></value>
         public bool FoodAndYardWaste { get; set; } = false;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <value></value>
-        public bool Status { get; set; } = false;
-
         /// <inheritdoc />
         public override string ToString() => $"Date: {this.Start}, G: {this.Garbage}, R: {this.Recycling}, F: {this.FoodAndYardWaste}";
     }
