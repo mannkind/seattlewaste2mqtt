@@ -21,13 +21,7 @@ namespace SeattleWaste.Managers
             base(logger, outgoing, incoming, sharedOpts.Value.Resources, opts.Value.PollingInterval, sourceDAO,
                 SourceSettings(sharedOpts.Value, opts.Value))
         {
-            this.AlertWithin = opts.Value.AlertWithin;
         }
-
-        /// <summary>
-        /// The timespan before which the alert flag should be set.
-        /// </summary>
-        protected readonly TimeSpan AlertWithin;
 
         /// <inheritdoc />
         protected override Resource MapResponse(FetchResponse src) =>
@@ -38,7 +32,6 @@ namespace SeattleWaste.Managers
                 Garbage = src.Garbage,
                 Recycling = src.Recycling,
                 FoodAndYardWaste = src.FoodAndYardWaste,
-                Status = src.Start.Subtract(DateTime.Now) <= this.AlertWithin,
             };
 
         private static string SourceSettings(Models.Shared.Opts sharedOpts, Models.SourceManager.Opts opts) =>
