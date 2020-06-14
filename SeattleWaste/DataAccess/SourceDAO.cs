@@ -34,7 +34,8 @@ namespace SeattleWaste.DataAccess
         {
             try
             {
-                return await this.FetchAsync(key.Address, cancellationToken);
+                var todayTimeStamp = ((DateTimeOffset)DateTime.Today).ToUnixTimeSeconds();
+                return await this.FetchAsync(key.Address, todayTimeStamp, 0L, cancellationToken);
             }
             catch (Exception e)
             {
@@ -47,23 +48,18 @@ namespace SeattleWaste.DataAccess
         }
 
         /// <summary>
-        /// The HTTP client used to access the source.
-        /// </summary>
-        private readonly HttpClient Client;
-
-        /// <summary>
         /// Fetch one response from the source.
         /// </summary>
         /// <param name="address"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<Models.SourceManager.FetchResponse?> FetchAsync(string address,
+        protected async Task<Models.SourceManager.FetchResponse?> FetchAsync(string address,
+            long todayTimeStamp,
+            long lastTimeStamp,
             CancellationToken cancellationToken = default)
         {
             this.Logger.LogDebug($"Started finding {address} from Seattle Waste");
             var apiCalls = 0;
-            var lastTimeStamp = 0L;
-            var todayTimeStamp = ((DateTimeOffset)DateTime.Today).ToUnixTimeSeconds();
 
             // Limit the number of times we'll hit the source before giving up
             while (lastTimeStamp <= todayTimeStamp && apiCalls <= MAX_API_CALLS)
@@ -87,6 +83,11 @@ namespace SeattleWaste.DataAccess
 
             return null;
         }
+
+        /// <summary>
+        /// The HTTP client used to access the source.
+        /// </summary>
+        private readonly HttpClient Client;
 
         /// <summary>
         /// Fetch all records from the source.
