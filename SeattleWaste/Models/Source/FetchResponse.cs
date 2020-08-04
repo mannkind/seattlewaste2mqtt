@@ -1,6 +1,6 @@
 using System;
 
-namespace SeattleWaste.Models.SourceManager
+namespace SeattleWaste.Models.Source
 {
     /// <summary>
     /// The response from the source

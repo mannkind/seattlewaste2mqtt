@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using SeattleWaste.DataAccess;
-using SeattleWaste.Models.SourceManager;
+using SeattleWaste.Models.Source;
 
 namespace SeattleWasteTest
 {
@@ -30,13 +30,7 @@ namespace SeattleWasteTest
                     Today = new DateTime(2020, 6, 26),
                     Start = ((DateTimeOffset)new DateTime(2020, 6, 26)).ToUnixTimeSeconds(),
                     Expected = new DateTime(2020, 7, 3)
-                },
-                new {
-                    Address = testAddress,
-                    Today = new DateTime(2020, 6, 26),
-                    Start = 0L,
-                    Expected = new DateTime(2020, 7, 3)
-                },
+                }
             };
 
             var logger = new Mock<ILogger<LocalSourceDAO>>();

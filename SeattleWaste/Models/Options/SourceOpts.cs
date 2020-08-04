@@ -1,11 +1,11 @@
 using System;
 
-namespace SeattleWaste.Models.SourceManager
+namespace SeattleWaste.Models.Options
 {
     /// <summary>
     /// The source options
     /// </summary>
-    public class Opts
+    public class SourceOpts
     {
         public const string Section = "SeattleWaste";
 

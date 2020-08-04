@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using SeattleWaste.Models.Shared;
 
-namespace SeattleWaste.Models.Shared
+namespace SeattleWaste.Models.Options
 {
     /// <summary>
     /// The shared options across the application
     /// </summary>
-    public class Opts
+    public class SharedOpts
     {
         public const string Section = "SeattleWaste";
 
