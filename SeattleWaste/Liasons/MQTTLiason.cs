@@ -41,11 +41,11 @@ namespace SeattleWaste.Liasons
 
             if (string.IsNullOrEmpty(slug))
             {
-                this.Logger.LogDebug($"Unable to find slug for {input.Address}");
+                this.Logger.LogDebug("Unable to find slug for {address}", input.Address);
                 return results;
             }
 
-            this.Logger.LogDebug($"Found slug {slug} for incoming data for {input.Address}");
+            this.Logger.LogDebug("Found slug {slug} for incoming data for {address}", slug, input.Address);
             results.AddRange(new[]
                 {
                     (this.Generator.StateTopic(slug, nameof(Resource.Start)), input.Start.ToShortDateString()),

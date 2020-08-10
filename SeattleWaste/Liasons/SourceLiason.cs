@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SeattleWaste.DataAccess;
@@ -26,9 +23,11 @@ namespace SeattleWaste.Liasons
             this.Questions = sharedOpts.Value.Resources;
 
             this.Logger.LogInformation(
-                $"PollingInterval: {opts.Value.PollingInterval}\n" +
-                $"Resources: {string.Join(',', sharedOpts.Value.Resources.Select(x => $"{x.Address}:{x.Slug}"))}\n" +
-                $""
+                "PollingInterval: {pollingInterval}\n" +
+                "Resources: {@resources}\n" +
+                "",
+                opts.Value.PollingInterval,
+                sharedOpts.Value.Resources
             );
         }
 
@@ -37,7 +36,7 @@ namespace SeattleWaste.Liasons
         {
             foreach (var key in this.Questions)
             {
-                this.Logger.LogDebug($"Looking up {key}");
+                this.Logger.LogDebug("Looking up {key}", key);
                 var result = await this.SourceDAO.FetchOneAsync(key, cancellationToken);
                 var resp = result != null ? this.MapData(result) : null;
                 yield return resp;
