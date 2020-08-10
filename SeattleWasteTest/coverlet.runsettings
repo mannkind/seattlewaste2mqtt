@@ -4,7 +4,7 @@
     <DataCollectors>
       <DataCollector friendlyName="XPlat code coverage">
         <Configuration>
-          <Include>SeattleWaste.DataAccess.*,SeattleWaste.Managers.*</Include>
+          <Include>SeattleWaste.DataAccess.*,SeattleWaste.Liasons.*</Include>
         </Configuration>
       </DataCollector>
     </DataCollectors>

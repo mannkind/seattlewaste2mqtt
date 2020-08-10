@@ -8,7 +8,7 @@ using Moq;
 using SeattleWaste.DataAccess;
 using SeattleWaste.Models.Source;
 
-namespace SeattleWasteTest
+namespace SeattleWasteTest.DataAccess
 {
     [TestClass]
     public class SourceDAOTest

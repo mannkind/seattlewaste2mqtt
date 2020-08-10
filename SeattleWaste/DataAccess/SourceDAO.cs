@@ -68,13 +68,13 @@ namespace SeattleWaste.DataAccess
             long lastTimeStamp,
             CancellationToken cancellationToken = default)
         {
-            this.Logger.LogDebug($"Started finding {address} from Seattle Waste");
+            this.Logger.LogDebug("Started finding {address} from Seattle Waste", address);
             var apiCalls = 0;
 
             // Limit the number of times we'll hit the source before giving up
             while (lastTimeStamp <= todayTimeStamp && apiCalls <= MAX_API_CALLS)
             {
-                this.Logger.LogDebug($"{apiCalls} iteration;  timestamp {lastTimeStamp}");
+                this.Logger.LogDebug("{apiCalls} iteration;  timestamp {lastTimeStamp}", apiCalls, lastTimeStamp);
                 var collections = await this.FetchAllAsync(address, lastTimeStamp, cancellationToken);
                 foreach (var collection in collections)
                 {
@@ -115,14 +115,14 @@ namespace SeattleWaste.DataAccess
         private async Task<IEnumerable<FetchResponse>> FetchAllAsync(string address, long start,
             CancellationToken cancellationToken = default)
         {
-            this.Logger.LogDebug($"Started finding collection days for {address} @ {start} from Seattle Waste");
+            this.Logger.LogDebug("Started finding collection days for {address} @ {start} from Seattle Waste", address, start);
             var baseUrl = "https://www.seattle.gov/UTIL/WARP/CollectionCalendar/GetCollectionDays";
             var query = $"pApp=CC&pAddress={WebUtility.UrlEncode(address)}&start={start}";
             var resp = await this.Client.GetAsync($"{baseUrl}?{query}", cancellationToken);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync();
             var obj = JsonConvert.DeserializeObject<List<FetchResponse>>(content);
-            this.Logger.LogDebug($"Finished finding collection days for {address} @ {start} from Seattle Waste");
+            this.Logger.LogDebug("Finished finding collection days for {address} @ {start} from Seattle Waste", address, start);
 
             return obj;
         }
