@@ -7,6 +7,7 @@ using SeattleWaste.Models.Options;
 using SeattleWaste.Models.Shared;
 using TwoMQTT.Core;
 using TwoMQTT.Core.Interfaces;
+using TwoMQTT.Core.Liasons;
 using TwoMQTT.Core.Models;
 using TwoMQTT.Core.Utils;
 
@@ -15,19 +16,17 @@ namespace SeattleWaste.Liasons
     /// <summary>
     /// An class representing a managed way to interact with MQTT.
     /// </summary>
-    public class MQTTLiason : IMQTTLiason<Resource, Command>
+    public class MQTTLiason : MQTTLiasonBase<Resource, Command, SlugMapping, SharedOpts>, IMQTTLiason<Resource, Command>
     {
         /// <summary>
-        /// Initializes a new instance of the MQTTLiason class.
+        /// 
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="generator"></param>
         /// <param name="sharedOpts"></param>
-        public MQTTLiason(ILogger<MQTTLiason> logger, IMQTTGenerator generator, IOptions<SharedOpts> sharedOpts)
+        public MQTTLiason(ILogger<MQTTLiason> logger, IMQTTGenerator generator, IOptions<SharedOpts> sharedOpts) :
+            base(logger, generator, sharedOpts)
         {
-            this.Logger = logger;
-            this.Generator = generator;
-            this.Questions = sharedOpts.Value.Resources;
         }
 
         /// <inheritdoc />
@@ -82,20 +81,5 @@ namespace SeattleWaste.Liasons
 
             return discoveries;
         }
-
-        /// <summary>
-        /// The logger used internally.
-        /// </summary>
-        private readonly ILogger<MQTTLiason> Logger;
-
-        /// <summary>
-        /// The questions to ask the source (typically some kind of key/slug pairing).
-        /// </summary>
-        private readonly List<SlugMapping> Questions;
-
-        /// <summary>
-        /// The MQTT generator used for things such as availability topic, state topic, command topic, etc.
-        /// </summary>
-        private readonly IMQTTGenerator Generator;
     }
 }

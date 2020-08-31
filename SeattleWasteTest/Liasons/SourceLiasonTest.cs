@@ -38,7 +38,7 @@ namespace SeattleWasteTest.Liasons
                 });
 
                 sourceDAO.Setup(x => x.FetchOneAsync(test.Q, It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(new SeattleWaste.Models.Source.FetchResponse
+                     .ReturnsAsync(new SeattleWaste.Models.Source.Response
                      {
                          Address = test.Expected.Address,
                          Start = test.Expected.Start,

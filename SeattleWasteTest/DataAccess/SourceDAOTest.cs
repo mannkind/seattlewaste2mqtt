@@ -59,7 +59,7 @@ namespace SeattleWasteTest.DataAccess
         {
         }
 
-        public Task<FetchResponse> FetchOneAsync(string address, long today, long start, CancellationToken cancellationToken = default)
+        public Task<Response> FetchOneAsync(string address, long today, long start, CancellationToken cancellationToken = default)
         {
             return base.FetchAsync(address, today, start, cancellationToken);
         }
