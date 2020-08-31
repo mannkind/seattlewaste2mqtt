@@ -1,27 +1,25 @@
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SeattleWaste.DataAccess;
+using SeattleWaste.Models.Options;
 using SeattleWaste.Models.Shared;
 using SeattleWaste.Models.Source;
 using TwoMQTT.Core.Interfaces;
+using TwoMQTT.Core.Liasons;
 
 namespace SeattleWaste.Liasons
 {
     /// <summary>
     /// An class representing a managed way to interact with a source.
     /// </summary>
-    public class SourceLiason : ISourceLiason<Resource, Command>
+    public class SourceLiason : SourceLiasonBase<Resource, Command, SlugMapping, ISourceDAO, SharedOpts>, ISourceLiason<Resource, Command>
     {
         public SourceLiason(ILogger<SourceLiason> logger, ISourceDAO sourceDAO,
-                    IOptions<Models.Options.SourceOpts> opts, IOptions<Models.Options.SharedOpts> sharedOpts)
+            IOptions<SourceOpts> opts, IOptions<SharedOpts> sharedOpts) :
+            base(logger, sourceDAO, sharedOpts)
         {
-            this.Logger = logger;
-            this.SourceDAO = sourceDAO;
-            this.Questions = sharedOpts.Value.Resources;
-
             this.Logger.LogInformation(
                 "PollingInterval: {pollingInterval}\n" +
                 "Resources: {@resources}\n" +
@@ -32,38 +30,19 @@ namespace SeattleWaste.Liasons
         }
 
         /// <inheritdoc />
-        public async IAsyncEnumerable<Resource?> FetchAllAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        protected override async Task<Resource?> FetchOneAsync(SlugMapping key, CancellationToken cancellationToken)
         {
-            foreach (var key in this.Questions)
-            {
-                this.Logger.LogDebug("Looking up {key}", key);
-                var result = await this.SourceDAO.FetchOneAsync(key, cancellationToken);
-                var resp = result != null ? this.MapData(result) : null;
-                yield return resp;
-            }
+            var result = await this.SourceDAO.FetchOneAsync(key, cancellationToken);
+            var resp = result != null ? this.MapData(result) : null;
+            return resp;
         }
-
-        /// <summary>
-        /// The logger used internally.
-        /// </summary>
-        private readonly ILogger<SourceLiason> Logger;
-
-        /// <summary>
-        /// The dao used to interact with the source.
-        /// </summary>
-        private readonly ISourceDAO SourceDAO;
-
-        /// <summary>
-        /// The questions to ask the source (typically some kind of key/slug pairing).
-        /// </summary>
-        private readonly List<SlugMapping> Questions;
 
         /// <summary>
         /// Map the source response to a shared response representation.
         /// </summary>
         /// <param name="src"></param>
         /// <returns></returns>
-        private Resource MapData(FetchResponse src) =>
+        private Resource MapData(Response src) =>
             new Resource
             {
                 Address = src.Address,

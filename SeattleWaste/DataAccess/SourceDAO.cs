@@ -8,12 +8,12 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SeattleWaste.Models.Shared;
 using SeattleWaste.Models.Source;
+using TwoMQTT.Core.Interfaces;
 
 namespace SeattleWaste.DataAccess
 {
-    public interface ISourceDAO
+    public interface ISourceDAO : ISourceDAO<SlugMapping, Response, Command, object>
     {
-        Task<FetchResponse?> FetchOneAsync(SlugMapping key, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ namespace SeattleWaste.DataAccess
         /// <param name="key"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<FetchResponse?> FetchOneAsync(SlugMapping key,
+        public async Task<Response?> FetchOneAsync(SlugMapping key,
             CancellationToken cancellationToken = default)
         {
             try
@@ -63,7 +63,7 @@ namespace SeattleWaste.DataAccess
         /// <param name="address"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected async Task<FetchResponse?> FetchAsync(string address,
+        protected async Task<Response?> FetchAsync(string address,
             long todayTimeStamp,
             long lastTimeStamp,
             CancellationToken cancellationToken = default)
@@ -112,7 +112,7 @@ namespace SeattleWaste.DataAccess
         /// <summary>
         /// Fetch all records from the source.
         /// </summary>
-        private async Task<IEnumerable<FetchResponse>> FetchAllAsync(string address, long start,
+        private async Task<IEnumerable<Response>> FetchAllAsync(string address, long start,
             CancellationToken cancellationToken = default)
         {
             this.Logger.LogDebug("Started finding collection days for {address} @ {start} from Seattle Waste", address, start);
@@ -121,7 +121,7 @@ namespace SeattleWaste.DataAccess
             var resp = await this.Client.GetAsync($"{baseUrl}?{query}", cancellationToken);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync();
-            var obj = JsonConvert.DeserializeObject<List<FetchResponse>>(content);
+            var obj = JsonConvert.DeserializeObject<List<Response>>(content);
             this.Logger.LogDebug("Finished finding collection days for {address} @ {start} from Seattle Waste", address, start);
 
             return obj;
