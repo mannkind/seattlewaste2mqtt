@@ -15,7 +15,7 @@ using TwoMQTT.Core.Managers;
 
 namespace SeattleWaste
 {
-    class Program : ConsoleProgram<Resource, Command, SourceLiason, MQTTLiason>
+    class Program : ConsoleProgram<Resource, object, SourceLiason, MQTTLiason>
     {
         static async Task Main(string[] args)
         {
@@ -53,7 +53,7 @@ namespace SeattleWaste
                     {
                         throw new ArgumentException($"{nameof(opts.Value.PollingInterval)} is required for {nameof(ThrottleManager)}.");
                     }
-                    
+
                     return new ThrottleManager(opts.Value.PollingInterval);
                 })
                 .AddSingleton<ISourceDAO, SourceDAO>();

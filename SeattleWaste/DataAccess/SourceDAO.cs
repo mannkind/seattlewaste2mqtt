@@ -12,7 +12,7 @@ using TwoMQTT.Core.Interfaces;
 
 namespace SeattleWaste.DataAccess
 {
-    public interface ISourceDAO : ISourceDAO<SlugMapping, Response, Command, object>
+    public interface ISourceDAO : ISourceDAO<SlugMapping, Response, object, object>
     {
     }
 
@@ -84,8 +84,12 @@ namespace SeattleWaste.DataAccess
                         continue;
                     }
 
-                    collection.Address = address;
-                    return collection;
+                    var addressedCollection = collection with
+                    {
+                        Address = address,
+                    };
+
+                    return addressedCollection;
                 }
 
                 apiCalls += 1;

@@ -16,7 +16,7 @@ namespace SeattleWaste.Liasons
     /// <summary>
     /// An class representing a managed way to interact with MQTT.
     /// </summary>
-    public class MQTTLiason : MQTTLiasonBase<Resource, Command, SlugMapping, SharedOpts>, IMQTTLiason<Resource, Command>
+    public class MQTTLiason : MQTTLiasonBase<Resource, object, SlugMapping, SharedOpts>, IMQTTLiason<Resource, object>
     {
         /// <summary>
         /// 
