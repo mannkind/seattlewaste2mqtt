@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="twomqtt" Version="0.9.20247.1124-dev" />
+    <PackageReference Include="twomqtt" Version="0.9.20292.3465-dev" />
   </ItemGroup>
 
 </Project>

@@ -49,9 +49,12 @@ namespace SeattleWaste.DataAccess
             }
             catch (Exception e)
             {
-                var msg = e is HttpRequestException ? "Unable to fetch from the Seattle Waste API" :
-                          e is JsonException ? "Unable to deserialize response from the Seattle Waste API" :
-                          "Unable to send to the Seattle Waste API";
+                var msg = e switch
+                {
+                    HttpRequestException => "Unable to fetch from the Seattle Waste API",
+                    JsonException => "Unable to deserialize response from the Seattle Waste API",
+                    _ => "Unable to send to the Seattle Waste API"
+                };
                 this.Logger.LogError(msg, e);
                 return null;
             }
