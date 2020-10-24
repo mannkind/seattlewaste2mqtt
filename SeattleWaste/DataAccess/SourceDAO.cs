@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SeattleWaste.Models.Shared;
 using SeattleWaste.Models.Source;
-using TwoMQTT.Core.Interfaces;
+using TwoMQTT.Interfaces;
 
 namespace SeattleWaste.DataAccess
 {

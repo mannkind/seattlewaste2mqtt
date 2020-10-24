@@ -6,8 +6,8 @@ using SeattleWaste.DataAccess;
 using SeattleWaste.Models.Options;
 using SeattleWaste.Models.Shared;
 using SeattleWaste.Models.Source;
-using TwoMQTT.Core.Interfaces;
-using TwoMQTT.Core.Liasons;
+using TwoMQTT.Interfaces;
+using TwoMQTT.Liasons;
 
 namespace SeattleWaste.Liasons
 {
@@ -33,23 +33,18 @@ namespace SeattleWaste.Liasons
         protected override async Task<Resource?> FetchOneAsync(SlugMapping key, CancellationToken cancellationToken)
         {
             var result = await this.SourceDAO.FetchOneAsync(key, cancellationToken);
-            var resp = result != null ? this.MapData(result) : null;
-            return resp;
-        }
-
-        /// <summary>
-        /// Map the source response to a shared response representation.
-        /// </summary>
-        /// <param name="src"></param>
-        /// <returns></returns>
-        private Resource MapData(Response src) =>
-            new Resource
+            return result switch
             {
-                Address = src.Address,
-                Start = src.Start,
-                Garbage = src.Garbage,
-                Recycling = src.Recycling,
-                FoodAndYardWaste = src.FoodAndYardWaste,
+                Response => new Resource
+                {
+                    Address = result.Address,
+                    Start = result.Start,
+                    Garbage = result.Garbage,
+                    Recycling = result.Recycling,
+                    FoodAndYardWaste = result.FoodAndYardWaste,
+                },
+                _ => null,
             };
+        }
     }
 }

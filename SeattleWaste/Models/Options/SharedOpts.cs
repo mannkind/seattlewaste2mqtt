@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using SeattleWaste.Models.Shared;
-using TwoMQTT.Core.Interfaces;
+using TwoMQTT.Interfaces;
 
 namespace SeattleWaste.Models.Options
 {

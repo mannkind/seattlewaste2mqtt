@@ -5,11 +5,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SeattleWaste.Models.Options;
 using SeattleWaste.Models.Shared;
-using TwoMQTT.Core;
-using TwoMQTT.Core.Interfaces;
-using TwoMQTT.Core.Liasons;
-using TwoMQTT.Core.Models;
-using TwoMQTT.Core.Utils;
+using TwoMQTT;
+using TwoMQTT.Interfaces;
+using TwoMQTT.Liasons;
+using TwoMQTT.Models;
+using TwoMQTT.Utils;
 
 namespace SeattleWaste.Liasons
 {
