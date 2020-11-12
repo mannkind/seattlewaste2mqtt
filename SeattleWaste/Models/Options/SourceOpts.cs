@@ -5,7 +5,7 @@ namespace SeattleWaste.Models.Options
     /// <summary>
     /// The source options
     /// </summary>
-    public class SourceOpts
+    public record SourceOpts
     {
         public const string Section = "SeattleWaste";
 
@@ -13,6 +13,6 @@ namespace SeattleWaste.Models.Options
         /// 
         /// </summary>
         /// <returns></returns>
-        public TimeSpan PollingInterval { get; set; } = new TimeSpan(8, 3, 31);
+        public TimeSpan PollingInterval { get; init; } = new TimeSpan(8, 3, 31);
     }
 }

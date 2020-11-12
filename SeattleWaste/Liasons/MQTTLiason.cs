@@ -5,18 +5,18 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SeattleWaste.Models.Options;
 using SeattleWaste.Models.Shared;
-using TwoMQTT.Core;
-using TwoMQTT.Core.Interfaces;
-using TwoMQTT.Core.Liasons;
-using TwoMQTT.Core.Models;
-using TwoMQTT.Core.Utils;
+using TwoMQTT;
+using TwoMQTT.Interfaces;
+using TwoMQTT.Liasons;
+using TwoMQTT.Models;
+using TwoMQTT.Utils;
 
 namespace SeattleWaste.Liasons
 {
     /// <summary>
     /// An class representing a managed way to interact with MQTT.
     /// </summary>
-    public class MQTTLiason : MQTTLiasonBase<Resource, Command, SlugMapping, SharedOpts>, IMQTTLiason<Resource, Command>
+    public class MQTTLiason : MQTTLiasonBase<Resource, object, SlugMapping, SharedOpts>, IMQTTLiason<Resource, object>
     {
         /// <summary>
         /// 

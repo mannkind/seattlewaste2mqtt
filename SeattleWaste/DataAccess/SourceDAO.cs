@@ -8,11 +8,11 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SeattleWaste.Models.Shared;
 using SeattleWaste.Models.Source;
-using TwoMQTT.Core.Interfaces;
+using TwoMQTT.Interfaces;
 
 namespace SeattleWaste.DataAccess
 {
-    public interface ISourceDAO : ISourceDAO<SlugMapping, Response, Command, object>
+    public interface ISourceDAO : ISourceDAO<SlugMapping, Response, object, object>
     {
     }
 
@@ -49,9 +49,12 @@ namespace SeattleWaste.DataAccess
             }
             catch (Exception e)
             {
-                var msg = e is HttpRequestException ? "Unable to fetch from the Seattle Waste API" :
-                          e is JsonException ? "Unable to deserialize response from the Seattle Waste API" :
-                          "Unable to send to the Seattle Waste API";
+                var msg = e switch
+                {
+                    HttpRequestException => "Unable to fetch from the Seattle Waste API",
+                    JsonException => "Unable to deserialize response from the Seattle Waste API",
+                    _ => "Unable to send to the Seattle Waste API"
+                };
                 this.Logger.LogError(msg, e);
                 return null;
             }
@@ -84,8 +87,12 @@ namespace SeattleWaste.DataAccess
                         continue;
                     }
 
-                    collection.Address = address;
-                    return collection;
+                    var addressedCollection = collection with
+                    {
+                        Address = address,
+                    };
+
+                    return addressedCollection;
                 }
 
                 apiCalls += 1;
