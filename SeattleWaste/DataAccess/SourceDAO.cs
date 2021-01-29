@@ -55,7 +55,7 @@ namespace SeattleWaste.DataAccess
                     JsonException => "Unable to deserialize response from the Seattle Waste API",
                     _ => "Unable to send to the Seattle Waste API"
                 };
-                this.Logger.LogError(msg, e);
+                this.Logger.LogError(msg + "; {exception}", e);
                 return null;
             }
         }

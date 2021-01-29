@@ -16,8 +16,5 @@ namespace SeattleWaste.Models.Shared
         /// </summary>
         /// <value></value>
         public string Slug { get; init; } = string.Empty;
-
-        /// <inheritdoc />
-        public override string ToString() => $"Address: {this.Address}, Slug: {this.Slug}";
     }
 }
