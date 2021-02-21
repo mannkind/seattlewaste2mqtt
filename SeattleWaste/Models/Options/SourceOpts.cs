@@ -13,6 +13,6 @@ namespace SeattleWaste.Models.Options
         /// 
         /// </summary>
         /// <returns></returns>
-        public TimeSpan PollingInterval { get; init; } = new TimeSpan(8, 3, 31);
+        public TimeSpan PollingInterval { get; init; } = new(8, 3, 31);
     }
 }

@@ -36,8 +36,5 @@ namespace SeattleWaste.Models.Source
         /// </summary>
         /// <value></value>
         public bool FoodAndYardWaste { get; init; } = false;
-
-        /// <inheritdoc />
-        public override string ToString() => $"Date: {this.Start}, G: {this.Garbage}, R: {this.Recycling}, F: {this.FoodAndYardWaste}";
     }
 }
