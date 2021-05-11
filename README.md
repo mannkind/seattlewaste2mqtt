@@ -7,6 +7,8 @@ License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)]
 
 An experiment to publish Seattle Collection statuses/dates to MQTT.
 
+NOTE: As of 2021, I no longer live in the city of Seattle. I currently plan to keep this project active (unless it becomes a burden), but I might not notice issues immediately because I no longer rely on it.
+
 ## Use
 
 The application can be locally built using `dotnet build` or you can utilize the multi-architecture Docker image(s).

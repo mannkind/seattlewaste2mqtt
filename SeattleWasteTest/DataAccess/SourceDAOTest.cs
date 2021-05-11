@@ -16,20 +16,13 @@ namespace SeattleWasteTest.DataAccess
         [TestMethod]
         public async Task FetchOneAsync()
         {
-            var testAddress = "2133 N 61ST ST";
             var tests = new[]
             {
                 new {
-                    Address = testAddress,
-                    Today = new DateTime(2020, 6, 13),
-                    Start =  ((DateTimeOffset)new DateTime(2020, 6, 12)).ToUnixTimeSeconds(),
-                    Expected = new DateTime(2020, 6, 19)
+                    Address = "2133 N 61ST ST",
                 },
                 new {
-                    Address = testAddress,
-                    Today = new DateTime(2020, 6, 26),
-                    Start = ((DateTimeOffset)new DateTime(2020, 6, 26)).ToUnixTimeSeconds(),
-                    Expected = new DateTime(2020, 7, 3)
+                    Address = "7022 12th Ave NW",
                 }
             };
 
@@ -44,10 +37,8 @@ namespace SeattleWasteTest.DataAccess
             foreach (var test in tests)
             {
                 var address = test.Address;
-                var today = ((DateTimeOffset)test.Today).ToUnixTimeSeconds();
-                var start = test.Start;
-                var result = await dao.FetchOneAsync(address, today, start);
-                Assert.AreEqual(test.Expected, result.Start);
+                var result = await dao.FetchOneAsync(address, DateTime.Today);
+                Assert.IsNotNull(result);
             }
         }
     }
@@ -59,9 +50,9 @@ namespace SeattleWasteTest.DataAccess
         {
         }
 
-        public Task<Response> FetchOneAsync(string address, long today, long start, CancellationToken cancellationToken = default)
+        public Task<Response> FetchOneAsync(string address, DateTime today, CancellationToken cancellationToken = default)
         {
-            return base.FetchAsync(address, today, start, cancellationToken);
+            return base.FetchAsync(address, today, cancellationToken);
         }
     }
 }
