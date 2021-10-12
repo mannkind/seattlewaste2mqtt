@@ -13,7 +13,7 @@ using TwoMQTT.Interfaces;
 
 namespace SeattleWaste.DataAccess
 {
-    public interface ISourceDAO : ISourceDAO<SlugMapping, Response, object, object>
+    public interface ISourceDAO : IPollingSourceDAO<SlugMapping, Response, object, object>
     {
     }
 

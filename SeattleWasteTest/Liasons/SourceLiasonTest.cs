@@ -45,7 +45,7 @@ namespace SeattleWasteTest.Liasons
                      });
 
                 var sourceLiason = new SourceLiason(logger.Object, sourceDAO.Object, opts, sharedOpts);
-                await foreach (var result in sourceLiason.FetchAllAsync())
+                await foreach (var result in sourceLiason.ReceiveDataAsync())
                 {
                     Assert.AreEqual(test.Expected.Address, result.Address);
                     Assert.AreEqual(test.Expected.Start, result.Start);
