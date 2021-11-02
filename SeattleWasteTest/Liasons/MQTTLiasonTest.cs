@@ -7,7 +7,7 @@ using Moq;
 using SeattleWaste.Liasons;
 using SeattleWaste.Models.Options;
 using SeattleWaste.Models.Shared;
-using TwoMQTT.Utils;
+using TwoMQTT.Interfaces;
 
 namespace SeattleWasteTest.Liasons;
 
