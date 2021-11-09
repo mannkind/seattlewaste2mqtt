@@ -1,3 +1,9 @@
+# unmaintained
+
+It appears that in Oct 2021, I lost access to the API. :(
+
+HTTP 403 UNAUTHORIZED
+
 # seattlewaste2mqtt
 
 [![Software
@@ -6,8 +12,6 @@ License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)]
 [![Coverage Status](https://img.shields.io/codecov/c/github/mannkind/seattlewaste2mqtt/main.svg)](http://codecov.io/github/mannkind/seattlewaste2mqtt?branch=main)
 
 An experiment to publish Seattle Collection statuses/dates to MQTT.
-
-NOTE: As of 2021, I no longer live in the city of Seattle. I currently plan to keep this project active (unless it becomes a burden), but I might not notice issues immediately because I no longer rely on it.
 
 ## Use
 
